@@ -188,7 +188,7 @@ npm run test:integration
 - https://maps.gsi.go.jp/help/pdf/vector/dataspec.pdf
 - https://maps.gsi.go.jp/help/pdf/vector/attribute.pdf
 - https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
-# 国外の検索（生成対象：米国・台湾・韓国）
+# 国外の検索
 
 `reverseGeocode` は国内・国外で共通のAPIです。日本は従来の行政区域データ（国土数値情報）と近傍データ（国土地理院）を使い、
 国外は公開済みのOSMデータを使います。既存の `openReverseGeocoder` と `searchNearby`
@@ -232,7 +232,7 @@ console.log(result.attribution)        // 利用画面等での出典表示に�
 `place-of-worship`（宗教施設）です。出口は `ic`、サービス施設は `sa`、休憩所は `pa`
 に対応付けています。名称がない出口は番号がある場合 `Exit 10` のように返します。
 
-APIと座標処理は世界対応です。生成対象は米国50州とDC（海外領土は対象外）、台湾、韓国です。
+APIと座標処理は世界対応です。生成対象は米国50州とDC（海外領土は対象外）、台湾、韓国、インドネシア、インド、ベトナム、フィリピン、タイです。
 追加地域も全国生成・検索検証・公開が完了してから利用できます。実際の公開範囲・版は
 `https://sentium.github.io/open-reverse-geocoder/osm/catalog.json` で確認できます。
 カタログの公開前は利用できません。未公開地域は `UnsupportedRegionError`、通信失敗や
@@ -290,12 +290,34 @@ node bin/download-osm-data.js https://sentium.github.io/open-reverse-geocoder/os
 ```sh
 # 台湾だけをローカル生成・検証（出力先は新規ディレクトリ）
 node bin/build-osm-regions.js --region taiwan --source tmp/taiwan-source --output tmp/taiwan-data --version taiwan-preview-1
-# 韓国は --region south-korea、全対象国は --region all
+# 韓国は --region south-korea、インドは --region india、全対象国は --region all
 ```
 
-Actionsの `region=taiwan` / `south-korea` / `us` は単独地域のプレビュー専用です。
+Actionsで単独地域の `region` を指定した生成はプレビュー専用です。
 `source_run` で以前の `osm-build-input` を使う場合も公開できません。
 旧形式の米国入力を再利用する場合は `region=us` を指定します。
 公開には `region=all` で全対象国の新しいスナップショットを取得し、全地域の検証に成功する必要があります。
 単独地域の更新で既存の国がカタログから消えることを防ぎます。国内との合計容量が既存のPages上限を
 超えた場合も公開を停止し、既存サイトを保持します。
+
+
+| 対象 | `region` | 国コード | タイル保存形式 |
+| --- | --- | --- | --- |
+| 米国 | `us` | US | JSON |
+| 台湾 | `taiwan` | TW | JSON |
+| 韓国 | `south-korea` | KR | JSON |
+| インドネシア | `indonesia` | ID | JSON gzip |
+| インド | `india` | IN | JSON gzip |
+| ベトナム | `vietnam` | VN | JSON gzip |
+| フィリピン | `philippines` | PH | JSON gzip |
+| タイ | `thailand` | TH | JSON gzip |
+
+追加5か国の行政界・施設・道路タイルは `.json.gz` として保存し、manifest の
+`tileCompression: "gzip"` で識別します。カタログ・manifest・索引は通常のJSONです。
+ライブラリが解凍するため、配信側で特別なContent-Encoding設定は不要です。
+解凍量・JSONの文字列サイズに上限を設け、gzipのチェックサム・長さも検証します。
+既存の非圧縮データもそのまま読み込めます。追加5か国にはこの変更を含むライブラリが必要です。
+全量ダウンロードツールもgzipファイルを取得・検証し、その形式のまま保存します。
+
+インドネシアの原抽出は東ティモールを含みますが、公開カタログの国コードはIDです。
+東ティモールをインドネシアとして返すための範囲変更は行いません。
