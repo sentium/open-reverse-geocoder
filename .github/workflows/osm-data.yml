@@ -1,6 +1,13 @@
 name: Update OSM data
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - bin/build-osm-data.py
+      - bin/osm-export.json
+      - bin/osm-requirements.txt
+      - .github/workflows/osm-data.yml
   workflow_dispatch:
     inputs:
       publish:
@@ -87,7 +94,7 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
       - uses: actions/upload-artifact@v4
-        if: github.ref_name == github.event.repository.default_branch && (github.event_name == 'schedule' || inputs.publish)
+        if: github.ref_name == github.event.repository.default_branch && (github.event_name == 'schedule' || github.event_name == 'push' || inputs.publish)
         with:
           name: osm-pages-data
           path: tmp/osm-data

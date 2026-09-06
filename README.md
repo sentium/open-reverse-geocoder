@@ -260,7 +260,10 @@ node bin/download-osm-data.js https://sentium.github.io/open-reverse-geocoder/os
 [国際検索の設計](design/international-search.md)を参照してください。
 `npm run test:osm` は実際のOSM施設データを使う結合テストを含みます。
 
-公開時は `Update OSM data` を既定ブランチで `publish=true` として実行します。
+この変更のマージ後、および各生成スクリプト・ワークフローのmainへの変更時に、国内・米国それぞれの全国生成を自動実行します。
+手動では `Update OSM data` を既定ブランチで `publish=true`、国内は `Update search data` を
+`scope=japan, publish=true` として実行します。以後は四半期ごとにも更新します。
 国内の全国生成成果物と国外生成成果物が両方揃うと `Publish search datasets` が
-両方を検証してまとめてPagesへ配置します。片方がない・壊れている場合は既存サイトを保持します。
+両方を検証してまとめてPagesへ配置します。片方がまだない場合は公開を保留し、後続の生成完了時に再判定します。
+検証失敗時も既存サイトを保持します。国内生成は一時的な通信障害を最大8回・指数的な待ち時間で再試行します。
 成果物の保持期限（90日）が過ぎた場合は該当データを再生成してください。

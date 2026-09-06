@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   eligible:
-    if: (github.event_name == 'workflow_dispatch' && github.ref_name == github.event.repository.default_branch) || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == github.event.repository.default_branch && github.event.workflow_run.head_repository.full_name == github.repository && (github.event.workflow_run.event == 'workflow_dispatch' || github.event.workflow_run.event == 'schedule'))
+    if: (github.event_name == 'workflow_dispatch' && github.ref_name == github.event.repository.default_branch) || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == github.event.repository.default_branch && github.event.workflow_run.head_repository.full_name == github.repository && (github.event.workflow_run.event == 'workflow_dispatch' || github.event.workflow_run.event == 'schedule' || github.event.workflow_run.event == 'push'))
     runs-on: ubuntu-latest
     outputs:
       publish: ${{ steps.check.outputs.publish }}
@@ -36,6 +36,8 @@ jobs:
     needs: eligible
     if: needs.eligible.outputs.publish == 'true'
     runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.components.outputs.ready }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,15 +47,19 @@ jobs:
           node-version: 22.x
           cache: npm
       - run: npm ci && npm run build
-      - run: node bin/fetch-data-artifacts.js
+      - id: components
+        run: node bin/fetch-data-artifacts.js
         env:
           GH_TOKEN: ${{ github.token }}
-      - run: node bin/assemble-pages.js tmp/components/japan tmp/components/osm tmp/pages
-      - uses: actions/upload-pages-artifact@v3
+      - if: steps.components.outputs.ready == 'true'
+        run: node bin/assemble-pages.js tmp/components/japan tmp/components/osm tmp/pages
+      - if: steps.components.outputs.ready == 'true'
+        uses: actions/upload-pages-artifact@v3
         with:
           path: tmp/pages
   deploy:
     needs: assemble
+    if: needs.assemble.outputs.ready == 'true'
     runs-on: ubuntu-latest
     permissions:
       pages: write

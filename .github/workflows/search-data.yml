@@ -1,6 +1,12 @@
 name: Update search data
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'bin/build-search-data.js'
+      - 'bin/lib/**'
+      - '.github/workflows/search-data.yml'
   pull_request:
     paths:
       - 'src/**'
@@ -51,8 +57,8 @@ jobs:
           BBOX: ${{ inputs.bbox }}
           EVENT_NAME: ${{ github.event_name }}
         run: |
-          if [ "$EVENT_NAME" = schedule ] || [ "$SCOPE" = japan ]; then
-            npm run build:data -- --all --version "run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --output tmp/generated-data --discard-source-cache
+          if [ "$EVENT_NAME" = schedule ] || [ "$EVENT_NAME" = push ] || [ "$SCOPE" = japan ]; then
+            npm run build:data -- --all --version "run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --output tmp/generated-data --discard-source-cache --concurrency 8
           else
             npm run build:data -- --bbox "${BBOX:-139.70,35.62,139.83,35.74}" --version "run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --output tmp/generated-data --discard-source-cache
           fi
@@ -65,7 +71,7 @@ jobs:
           include-hidden-files: true
           retention-days: 7
       - uses: actions/upload-artifact@v4
-        if: github.ref_name == github.event.repository.default_branch && (github.event_name == 'schedule' || (inputs.publish && inputs.scope == 'japan'))
+        if: github.ref_name == github.event.repository.default_branch && (github.event_name == 'schedule' || github.event_name == 'push' || (inputs.publish && inputs.scope == 'japan'))
         with:
           name: gsi-pages-data
           path: tmp/pages

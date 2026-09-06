@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Download only explicitly publishable artifacts from successful default-branch
-// scheduled/manual builds in this repository. PR artifacts are never selected.
+// scheduled/manual/push builds in this repository. PR artifacts are never selected.
 const { execFileSync } = require('node:child_process')
 const fs = require('node:fs/promises')
 const path = require('node:path')
@@ -18,6 +18,7 @@ const api = (endpoint) =>
       },
     ),
   )
+class MissingArtifactError extends Error {}
 async function download(workflow, names, destination, required) {
   const branch = api('').default_branch
   const runs = api(
@@ -27,7 +28,7 @@ async function download(workflow, names, destination, required) {
   ).workflow_runs
   for (const run of runs) {
     if (
-      !['workflow_dispatch', 'schedule'].includes(run.event) ||
+      !['workflow_dispatch', 'schedule', 'push'].includes(run.event) ||
       run.head_repository.full_name !== repo
     )
       continue
@@ -73,7 +74,7 @@ async function download(workflow, names, destination, required) {
     return
   }
   if (required)
-    throw new Error(
+    throw new MissingArtifactError(
       `No retained publishable artifact for ${workflow}; run its nationwide publish build first`,
     )
   console.log(`${workflow}: no publishable data yet`)
@@ -86,7 +87,20 @@ async function download(workflow, names, destination, required) {
     true,
   )
   await download('osm-data.yml', ['osm-pages-data'], 'tmp/components/osm', true)
+  if (process.env.GITHUB_OUTPUT)
+    await fs.appendFile(process.env.GITHUB_OUTPUT, 'ready=true\n')
 })().catch((e) => {
+  if (e instanceof MissingArtifactError && process.env.GITHUB_OUTPUT) {
+    fs.appendFile(process.env.GITHUB_OUTPUT, 'ready=false\n').catch((error) => {
+      console.error(error)
+      process.exitCode = 1
+    })
+    console.log(
+      'Waiting for both publishable datasets; the existing site is preserved. ' +
+        e.message,
+    )
+    return
+  }
   console.error(e)
   process.exitCode = 1
 })
