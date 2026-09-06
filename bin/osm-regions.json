@@ -194,8 +194,8 @@
     ],
     "nearbySamples": [
       [
-        "Palacio de Bellas Artes",
-        [-99.1413, 19.4352],
+        "Museo del Palacio de Bellas Artes",
+        [-99.141263, 19.4354684],
         "landmark",
         "Bellas Artes"
       ]
@@ -245,9 +245,9 @@
     "nearbySamples": [
       [
         "Holy Spirit Cathedral",
-        [27.556, 53.9058],
+        [27.556191689503386, 53.905038649999995],
         "landmark",
-        "Духа|Духаў|Spirit"
+        "Кафедральны сабор Сашэсця Святога Духа"
       ]
     ]
   },
@@ -266,7 +266,12 @@
     "group": "europe",
     "administrativeSamples": [["Sarajevo", [18.428, 43.859], "BA-BIH"]],
     "nearbySamples": [
-      ["Sebilj", [18.4313, 43.8598], "landmark", "Sebilj|Себиљ"]
+      [
+        "Sarajevo City Hall",
+        [18.43334677255322, 43.8591665],
+        "landmark",
+        "Vijećnica"
+      ]
     ]
   },
   "bulgaria": {
@@ -306,7 +311,12 @@
     "group": "europe",
     "administrativeSamples": [["Nicosia", [33.3617, 35.1725], "CY-01"]],
     "nearbySamples": [
-      ["Cyprus Museum", [33.3553, 35.1726], "landmark", "Μουσείο|Museum"]
+      [
+        "Cyprus Museum",
+        [33.35575263212078, 35.171732649999996],
+        "landmark",
+        "^Κυπριακό Μουσείο$"
+      ]
     ]
   },
   "czech-republic": {

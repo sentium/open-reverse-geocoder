@@ -24,6 +24,9 @@ class OsmDataTest(unittest.TestCase):
             b = builder.Builder(Path(tmp), builder.normalize_geojson(polygon(0, 0, 1, 1)), {'IN': 'India'})
             tags = {'@id': 1, '@type': 'relation', 'boundary': 'administrative', 'admin_level': '2', 'ISO3166-1:alpha2': 'IN', 'name': 'Synthetic country'}
             b.add({'type': 'Feature', 'geometry': polygon(1, 0, 2, 1), 'properties': tags})
+            # Brazil's extract includes complete relations outside its exact
+            # footprint; their intersection is POLYGON EMPTY (NaN bounds).
+            b.add({'type': 'Feature', 'geometry': polygon(2, 0, 3, 1), 'properties': tags})
             self.assertEqual(b.db.execute('SELECT COUNT(*) FROM records').fetchone()[0], 0)
             self.assertEqual(b.stats['country:IN'], 0)
             b.add({'type': 'Feature', 'geometry': polygon(0, 0, 1, 1), 'properties': tags})

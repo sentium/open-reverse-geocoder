@@ -153,6 +153,8 @@ class Builder:
         kinds = ('Polygon', 'LineString')
         for kind in kinds:
             for part in components(geometry, kind):
+                if part.is_empty:
+                    continue
                 w, s, e, n = part.bounds
                 x0, y0 = tile_at(w, n, zoom)
                 x1, y1 = tile_at(e, s, zoom)
