@@ -1,0 +1,63 @@
+name: Update OSM data
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the US dataset from main after validation
+        type: boolean
+        default: false
+  schedule:
+    - cron: '43 18 8 1,4,7,10 *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: osm-data-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci && npm run build
+      - run: pip install -r bin/osm-requirements.txt
+      - run: sudo apt-get update && sudo apt-get install -y osmium-tool
+      - name: Download and filter the US snapshot
+        run: |
+          mkdir -p tmp/osm-source
+          curl --fail --silent --show-error --location --retry 3 --output tmp/osm-source/regions.json https://download.geofabrik.de/index-v1.json
+          node -e 'const fs=require("fs");const f=JSON.parse(fs.readFileSync("tmp/osm-source/regions.json")).features.find(f=>f.properties.id==="us");if(!f)throw Error("US extract missing");fs.writeFileSync("tmp/osm-source/region.json",JSON.stringify(f))'
+          curl --fail --silent --show-error --location --retry 3 --max-time 14400 --output tmp/osm-source/us.osm.pbf https://download.geofabrik.de/north-america/us-latest.osm.pbf
+          sha256sum tmp/osm-source/us.osm.pbf > tmp/osm-source/SHA256SUMS
+          osmium fileinfo tmp/osm-source/us.osm.pbf > tmp/osm-source/snapshot.txt
+          osmium tags-filter tmp/osm-source/us.osm.pbf nwr/railway=station,halt nwr/highway=motorway,motorway_junction,services,rest_area nwr/tourism=attraction,museum,gallery,zoo,viewpoint nwr/historic nwr/leisure=park nwr/amenity=place_of_worship wr/boundary=administrative -o tmp/osm-source/filtered.osm.pbf
+          rm tmp/osm-source/us.osm.pbf
+          osmium export tmp/osm-source/filtered.osm.pbf -c bin/osm-export.json -f geojsonseq -o tmp/osm-source/features.geojsonseq --show-errors 2> tmp/osm-source/geometry-errors.log
+          rm tmp/osm-source/filtered.osm.pbf
+      - name: Build immutable US dataset
+        run: |
+          python bin/build-osm-data.py --input tmp/osm-source/features.geojsonseq --region-file tmp/osm-source/region.json --version "run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --source-revision "$(cat tmp/osm-source/SHA256SUMS)" --output tmp/osm-data
+          node bin/prepare-osm-catalog.js tmp/osm-data
+          cp tmp/osm-source/snapshot.txt tmp/osm-source/SHA256SUMS tmp/osm-source/geometry-errors.log tmp/osm-data/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: osm-data-preview
+          path: tmp/osm-data
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: github.ref_name == github.event.repository.default_branch && (github.event_name == 'schedule' || inputs.publish)
+        with:
+          name: osm-pages-data
+          path: tmp/osm-data
+          retention-days: 90

@@ -1,0 +1,6 @@
+{
+  "attributes": {"type": true, "id": true},
+  "linear_tags": ["highway=motorway,motorway_link"],
+  "area_tags": ["boundary=administrative", "railway=station,halt", "highway=services,rest_area", "tourism", "historic", "leisure=park", "amenity=place_of_worship"],
+  "include_tags": ["name", "name:en", "official_name", "ref", "highway", "railway", "station", "usage", "access", "tourism", "historic", "leisure", "amenity", "religion", "boundary", "admin_level", "ISO3166-1", "ISO3166-1:alpha2", "ISO3166-2", "width", "lanes", "disused", "abandoned", "construction"]
+}

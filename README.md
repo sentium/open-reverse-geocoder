@@ -187,3 +187,68 @@ npm run test:integration
 - https://maps.gsi.go.jp/help/pdf/vector/dataspec.pdf
 - https://maps.gsi.go.jp/help/pdf/vector/attribute.pdf
 - https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
+# 国外の検索（初回公開対象：米国）
+
+`reverseGeocode` は国内・国外で共通のAPIです。日本は従来の国土地理院データを使い、
+国外は公開済みのOSMデータを使います。既存の `openReverseGeocoder` と `searchNearby`
+の既定データ源・戻り値は維持しています。
+
+```ts
+import { reverseGeocode } from '@geolonia/open-reverse-geocoder'
+
+const result = await reverseGeocode([-77.0065, 38.8977], {
+  nearby: {
+    rules: [
+      { kind: 'highway', radiusM: 5000, priority: 100 },
+      { kind: 'landmark', radiusM: 1000, priority: 80 },
+      { kind: 'station', radiusM: 5000, priority: 50 },
+    ],
+  },
+})
+console.log(result.countryCode)         // 公開データに国境があれば "US"
+console.log(result.administrativeAreas) // 包含する行政界を広域→詳細の順で返す
+console.log(result.nearby?.selected)    // 距離・優先順位で選んだ施設
+console.log(result.attribution)        // 利用画面等での出典表示に使用
+```
+
+`nearby: false` で行政地名だけを取得できます。国内の元の結果は `result.japan` に入ります。
+国外の行政界は `{ id, level, name, code, countryCode }` の配列です。OSMの `admin_level`
+の意味は国ごとに異なるため、一律に「州・郡・市」へ変換しません。境界データがない場合は
+空配列、国情報は `null` です。最寄りの街を所属自治体として推測しません。
+
+`source` は `auto`（既定）/ `japan` / `osm`、`osmDataUrl` は国外カタログを置くURL、
+`region` は任意の抽出地域IDです。`japan` オプションで従来の行政界タイルURL等を設定できます。
+`nearby.dataUrl` は国内データの設定に使用し、国外ではカタログが指す地域・バージョンを使います。
+国外も `resultMode`、`roadToleranceM`、`maxTiles` を国内と同様に指定できます。
+
+新規の国外カテゴリは `attraction`（観光施設）、`viewpoint`（展望地点）、
+`place-of-worship`（宗教施設）です。出口は `ic`、サービス施設は `sa`、休憩所は `pa`
+に対応付けています。名称がない出口は番号がある場合 `Exit 10` のように返します。
+
+APIと座標処理は世界対応ですが、データの初回公開は米国からです。実際の公開範囲・版は
+`https://sentium.github.io/open-reverse-geocoder/osm/catalog.json` で確認できます。
+カタログの公開前は利用できません。未公開地域は `UnsupportedRegionError`、通信失敗や
+掲載タイルの欠損は `SearchDataError` として区別します。
+検索に必要なタイルが抽出範囲をはみ出す場合もエラーです（隣国データとの自動結合は未対応）。
+緯度は約±85.05°以内です。
+
+位置は施設の代表点、高速道路上かどうかは中心線からの距離による推定です。
+駅の入口、徒歩距離、走行方向、同一路線の出口・SA/PAへの到達可能性は保証しません。
+OSMの収録漏れ・重複・更新状況は地域によって異なります。
+
+国外データは **© OpenStreetMap contributors / ODbL 1.0** です。商用利用できますが、
+利用アプリにも出典表示が必要です。配信するOSM由来データはODbLの条件を保持し、
+プログラムのMITライセンスや国内データの利用条件と区別してください。
+[OSM利用条件](https://www.openstreetmap.org/copyright) /
+[ジオコーディングの指針](https://osmfoundation.org/wiki/Licence/Community_Guidelines/Geocoding_-_Guideline)
+
+国外の生成には Node.js 22以上、Python 3.12、osmium-tool、
+`pip install -r bin/osm-requirements.txt` が必要です。手順は
+[OSM生成ワークフロー](.github/workflows/osm-data.yml)、設計は
+[国際検索の設計](design/international-search.md)を参照してください。
+`npm run test:osm` は実際のOSM施設データを使う結合テストを含みます。
+
+公開時は `Update OSM data` を既定ブランチで `publish=true` として実行します。
+国内の全国生成成果物と国外生成成果物が両方揃うと `Publish search datasets` が
+両方を検証してまとめてPagesへ配置します。片方がない・壊れている場合は既存サイトを保持します。
+成果物の保持期限（90日）が過ぎた場合は該当データを再生成してください。

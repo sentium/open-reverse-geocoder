@@ -23,7 +23,9 @@ import {
   validateManifest,
   validatePoiTile,
   validateRoadTile,
+  loadTileIndex,
 } from './search-data'
+import { polygonCoversTile } from './polygon'
 
 export const DEFAULT_SEARCH_DATA_URL =
   'https://sentium.github.io/open-reverse-geocoder/data'
@@ -91,6 +93,8 @@ function validateOptions(options: NearbyOptions): void {
 }
 
 function covered(manifest: SearchManifest, tile: Tile): boolean {
+  if (manifest.coverageGeometry)
+    return polygonCoversTile(manifest.coverageGeometry, tile)
   const scale = 2 ** (tile[0] - 12)
   const x = Math.floor(tile[1] / scale),
     y = Math.floor(tile[2] / scale)
@@ -104,6 +108,15 @@ export async function searchNearby(
   position: LngLat,
   options: NearbyOptions = {},
 ): Promise<NearbyResult> {
+  return searchNearbyWithManifest(position, options)
+}
+
+/** Internal entry point for a catalog-pinned immutable international version. */
+export async function searchNearbyWithManifest(
+  position: LngLat,
+  options: NearbyOptions = {},
+  pinnedManifest?: SearchManifest,
+): Promise<NearbyResult> {
   validatePosition(position)
   validateOptions(options)
   const rules = (options.rules ?? DEFAULT_SEARCH_RULES)
@@ -115,14 +128,10 @@ export async function searchNearby(
     /\/+$/,
     '',
   )
-  const manifest = await loadJson(
-    `${dataUrl}/manifest.json`,
-    validateManifest,
-    60000,
-  )
+  const manifest =
+    pinnedManifest ??
+    (await loadJson(`${dataUrl}/manifest.json`, validateManifest, 60000))
   const base = `${dataUrl}/${manifest.version}`
-  const poiKeys = new Set(manifest.poiTiles),
-    roadKeys = new Set(manifest.roadTiles)
   const visited = new Set<string>()
   function prepare(tiles: Tile[]): void {
     for (const t of tiles) {
@@ -139,6 +148,9 @@ export async function searchNearby(
   async function matchHighway(): Promise<boolean> {
     const tiles = tilesWithin(position, 200, 14)
     prepare(tiles)
+    const roadKeys = new Set(
+      (await loadTileIndex(manifest, base, tiles)).roadTiles,
+    )
     const roads = (
       await Promise.all(
         tiles
@@ -173,6 +185,9 @@ export async function searchNearby(
       if (rule.kind === 'highway' && !(await matchHighway())) continue
       const tiles = tilesWithin(position, rule.radiusM, 12)
       prepare(tiles)
+      const poiKeys = new Set(
+        (await loadTileIndex(manifest, base, tiles)).poiTiles,
+      )
       const pointTiles = await Promise.all(
         tiles
           .filter((t) => poiKeys.has(tileKey(t)))

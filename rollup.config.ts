@@ -3,11 +3,17 @@ import resolve from '@rollup/plugin-node-resolve'
 import commonjs from '@rollup/plugin-commonjs'
 
 export default {
-  input: 'src/main.ts',
+  input: ['src/main.ts', 'src/data-validation.ts'],
   output: {
     dir: 'dist',
     format: 'cjs',
   },
   plugins: [typescript(), resolve(), commonjs()],
-  external: ['axios', 'd3-geo', 'global-mercator', 'pbf', '@mapbox/vector-tile'],
+  external: [
+    'axios',
+    'd3-geo',
+    'global-mercator',
+    'pbf',
+    '@mapbox/vector-tile',
+  ],
 }

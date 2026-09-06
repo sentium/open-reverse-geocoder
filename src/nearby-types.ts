@@ -11,6 +11,9 @@ export type PlaceCategory =
   | 'sa'
   | 'pa'
   | 'smart-ic'
+  | 'attraction'
+  | 'viewpoint'
+  | 'place-of-worship'
 
 export interface SearchRule {
   kind: SearchKind
@@ -60,7 +63,7 @@ export type PoiRecord = [string, PlaceCategory, string, number, number]
 export type RoadRecord = [number, LngLat[]] // full width in metres, centerline
 
 export interface SearchManifest {
-  schemaVersion: 1
+  schemaVersion: 1 | 2
   version: string
   generatedAt: string
   source: string
@@ -69,6 +72,22 @@ export interface SearchManifest {
   coverage: [number, number, number, number][]
   poiTiles: string[]
   roadTiles: string[]
+  /** v2 splits tile indexes into z6 shards. */
+  indexTiles?: string[]
+  coverageGeometry?: MultiPolygon
+  license?: string
+}
+
+export interface MultiPolygon {
+  type: 'MultiPolygon'
+  coordinates: LngLat[][][]
+}
+
+export interface SearchIndex {
+  schemaVersion: 1
+  poiTiles: string[]
+  roadTiles: string[]
+  adminTiles: string[]
 }
 
 export interface PoiTile {
@@ -82,7 +101,17 @@ export interface RoadTile {
 
 export function categoryKind(category: PlaceCategory): SearchKind {
   if (category === 'station') return 'station'
-  if (['heritage', 'park', 'shrine', 'temple'].includes(category))
+  if (
+    [
+      'heritage',
+      'park',
+      'shrine',
+      'temple',
+      'attraction',
+      'viewpoint',
+      'place-of-worship',
+    ].includes(category)
+  )
     return 'landmark'
   return 'highway'
 }
@@ -97,4 +126,7 @@ export const PLACE_CATEGORIES: PlaceCategory[] = [
   'sa',
   'pa',
   'smart-ic',
+  'attraction',
+  'viewpoint',
+  'place-of-worship',
 ]

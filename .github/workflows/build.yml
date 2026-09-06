@@ -31,6 +31,14 @@ jobs:
       - run: npm run build
       - run: npm run test:integration
         if: matrix.node-version == '22.x' || matrix.node-version == '24.x'
+      - uses: actions/setup-python@v5
+        if: matrix.node-version == '22.x'
+        with:
+          python-version: '3.12'
+      - run: pip install -r bin/osm-requirements.txt && sudo apt-get update && sudo apt-get install -y osmium-tool
+        if: matrix.node-version == '22.x'
+      - run: npm run test:osm
+        if: matrix.node-version == '22.x'
       - run: npm pack --dry-run
 
   publish:

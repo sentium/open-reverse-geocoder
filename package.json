@@ -12,7 +12,9 @@
     "build:data": "node bin/build-search-data.js",
     "validate:data": "node bin/validate-search-data.js",
     "test:data": "node --test test/search-data.test.js",
-    "test:integration": "node --test test/integration.test.js"
+    "test:integration": "node --test test/integration.test.js",
+    "test:osm": "python3 test/osm-data.test.py && node --test test/osm-integration.test.js",
+    "validate:osm": "node bin/validate-osm-data.js"
   },
   "author": "",
   "license": "MIT",

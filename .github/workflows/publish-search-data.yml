@@ -1,0 +1,48 @@
+name: Publish search datasets
+on:
+  workflow_run:
+    workflows: [Update search data, Update OSM data]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: publish-search-datasets
+  cancel-in-progress: false
+
+jobs:
+  assemble:
+    if: github.event_name == 'workflow_dispatch' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == github.event.repository.default_branch && github.event.workflow_run.head_repository.full_name == github.repository && (github.event.workflow_run.event == 'workflow_dispatch' || github.event.workflow_run.event == 'schedule'))
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci && npm run build
+      - run: node bin/fetch-data-artifacts.js
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - run: node bin/assemble-pages.js tmp/components/japan tmp/components/osm tmp/pages
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: tmp/pages
+  deploy:
+    needs: assemble
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - uses: actions/deploy-pages@v4
+        id: deployment
