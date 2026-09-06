@@ -8,3 +8,4 @@ export {
 export { validateAdminTile, validateCatalog } from './international'
 export { tileAt, tileKey } from './spatial'
 export { tileBounds } from './polygon'
+export { decodeGzip } from './gzip'

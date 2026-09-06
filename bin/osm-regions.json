@@ -1,0 +1,268 @@
+{
+  "us": {
+    "countryCode": "US",
+    "boundaryConfig": "us-boundaries.json",
+    "administrativeSamples": [
+      ["Washington", [-77.0065, 38.8977], "US-DC"],
+      ["New York", [-73.9772, 40.7527], "US-NY"],
+      ["San Francisco", [-122.3966, 37.7934], "US-CA"],
+      ["Anchorage", [-149.89, 61.222], "US-AK"],
+      ["Honolulu", [-157.8583, 21.3069], "US-HI"]
+    ],
+    "nearbySamples": [
+      ["Washington station", [-77.0065, 38.8977], "station", "Union Station"],
+      ["US Capitol", [-77.009, 38.8898], "landmark", "United States Capitol"],
+      [
+        "Washington motorway exit",
+        [-77.0140866, 38.8938824],
+        "highway",
+        "Exit 10"
+      ]
+    ],
+    "tileCompression": "gzip"
+  },
+  "taiwan": {
+    "countryCode": "TW",
+    "adminZoom": 10,
+    "administrativeSamples": [
+      ["Taipei", [121.517, 25.0478], "TW-TPE"],
+      ["Kaohsiung", [120.3014, 22.6395], "TW-KHH"],
+      ["Hualien", [121.601, 23.992], "TW-HUA"]
+    ],
+    "nearbySamples": [
+      [
+        "Taipei Main Station",
+        [121.517, 25.0478],
+        "station",
+        "臺北|台北|Taipei"
+      ],
+      ["Taipei 101", [121.565, 25.0338], "landmark", "101"],
+      [
+        "Wugu motorway exit",
+        [121.4378874, 25.0687426],
+        "highway",
+        "^五股轉接道$"
+      ]
+    ],
+    "boundaryConfig": "taiwan-boundaries.json",
+    "tileCompression": "gzip"
+  },
+  "south-korea": {
+    "countryCode": "KR",
+    "adminZoom": 10,
+    "administrativeSamples": [
+      ["Seoul", [126.9707, 37.5547], "KR-11"],
+      ["Busan", [129.0403, 35.1152], "KR-26"],
+      ["Jeju", [126.5312, 33.4996], "KR-49"]
+    ],
+    "nearbySamples": [
+      ["Seoul Station", [126.9707, 37.5547], "station", "서울|Seoul"],
+      [
+        "Gyeongbokgung",
+        [126.9766818, 37.579754],
+        "landmark",
+        "경복궁|Gyeongbokgung"
+      ],
+      [
+        "Heolleung motorway exit",
+        [127.0902385, 37.4654316],
+        "highway",
+        "^헌릉$"
+      ]
+    ],
+    "tileCompression": "gzip"
+  },
+  "indonesia": {
+    "countryCode": "ID",
+    "adminZoom": 10,
+    "administrativeSamples": [
+      ["Jakarta", [106.8303, -6.1767], "ID-JK"],
+      ["Surabaya", [112.7508, -7.2654], "ID-JI"],
+      ["Denpasar", [115.2167, -8.65], "ID-BA"]
+    ],
+    "nearbySamples": [
+      ["Gambir station", [106.8303, -6.1767], "station", "Gambir"],
+      [
+        "National Monument",
+        [106.82715, -6.1754],
+        "landmark",
+        "Monumen Nasional|Monas"
+      ]
+    ],
+    "tileCompression": "gzip",
+    "countryName": "Indonesia"
+  },
+  "india": {
+    "countryCode": "IN",
+    "adminZoom": 10,
+    "administrativeSamples": [
+      ["New Delhi", [77.2195, 28.6428], "IN-DL"],
+      ["Mumbai", [72.8355, 18.9402], "IN-MH"],
+      ["Bengaluru", [77.5692, 12.9783], "IN-KA"]
+    ],
+    "nearbySamples": [
+      [
+        "New Delhi station",
+        [77.2195, 28.6428],
+        "station",
+        "New Delhi|नई दिल्ली"
+      ],
+      ["India Gate", [77.2295, 28.6129], "landmark", "India Gate|इंडिया गेट"]
+    ],
+    "tileCompression": "gzip"
+  },
+  "vietnam": {
+    "countryCode": "VN",
+    "adminZoom": 10,
+    "administrativeSamples": [
+      ["Hanoi", [105.8412, 21.025], "VN-HN"],
+      ["Ho Chi Minh City", [106.6778, 10.7822], "VN-SG"],
+      ["Da Nang", [108.2098, 16.071], "VN-DN"]
+    ],
+    "nearbySamples": [
+      ["Hanoi station", [105.8412, 21.025], "station", "Hà Nội|Hanoi"],
+      [
+        "Independence Palace",
+        [106.6953, 10.777],
+        "landmark",
+        "Độc Lập|Independence|Reunification"
+      ]
+    ],
+    "tileCompression": "gzip"
+  },
+  "philippines": {
+    "countryCode": "PH",
+    "adminZoom": 10,
+    "administrativeSamples": [
+      ["Manila", [120.9826, 14.6054], "PH-00"],
+      ["Cebu", [123.9007, 10.3157], "PH-07"],
+      ["Davao", [125.6131, 7.0644], "PH-11"]
+    ],
+    "nearbySamples": [
+      ["Doroteo Jose station", [120.9826, 14.6054], "station", "Doroteo Jose"],
+      ["Rizal Monument", [120.9770258, 14.5817929], "landmark", "Rizal"]
+    ],
+    "tileCompression": "gzip"
+  },
+  "thailand": {
+    "countryCode": "TH",
+    "adminZoom": 10,
+    "administrativeSamples": [
+      ["Bangkok", [100.5172, 13.7383], "TH-10"],
+      ["Chiang Mai", [99.017, 18.783], "TH-50"],
+      ["Phuket", [98.389, 7.884], "TH-83"]
+    ],
+    "nearbySamples": [
+      [
+        "Hua Lamphong station",
+        [100.5172, 13.7383],
+        "station",
+        "หัวลำโพง|Hua Lamphong|กรุงเทพ"
+      ],
+      ["Wat Arun", [100.4887, 13.7437], "landmark", "อรุณ|Arun"]
+    ],
+    "tileCompression": "gzip"
+  },
+  "brazil": {
+    "countryCode": "BR",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "americas",
+    "administrativeSamples": [
+      ["Brasilia", [-47.8825, -15.7942], "BR-DF"],
+      ["Sao Paulo", [-46.6333, -23.5505], "BR-SP"],
+      ["Rio de Janeiro", [-43.1729, -22.9068], "BR-RJ"]
+    ],
+    "nearbySamples": [
+      [
+        "Christ the Redeemer",
+        [-43.2104585, -22.9519173],
+        "landmark",
+        "Cristo Redentor"
+      ],
+      ["Luz station", [-46.6353, -23.535], "station", "Luz"]
+    ]
+  },
+  "mexico": {
+    "countryCode": "MX",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "americas",
+    "administrativeSamples": [
+      ["Mexico City", [-99.1332, 19.4326], "MX-CMX"],
+      ["Guadalajara", [-103.3496, 20.6767], "MX-JAL"],
+      ["Monterrey", [-100.3161, 25.6866], "MX-NLE"]
+    ],
+    "nearbySamples": [
+      [
+        "Museo del Palacio de Bellas Artes",
+        [-99.141263, 19.4354684],
+        "landmark",
+        "Bellas Artes"
+      ],
+      ["Buenavista station", [-99.1524, 19.447], "station", "Buenavista"]
+    ]
+  },
+  "germany": {
+    "countryCode": "DE",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [
+      ["Berlin", [13.405, 52.52], "DE-BE"],
+      ["Munich", [11.582, 48.1351], "DE-BY"],
+      ["Hamburg", [9.9937, 53.5511], "DE-HH"]
+    ],
+    "nearbySamples": [
+      ["Brandenburg Gate", [13.3777, 52.5163], "landmark", "Brandenburger Tor"],
+      ["Berlin Hauptbahnhof", [13.3695, 52.5251], "station", "Hauptbahnhof"]
+    ]
+  },
+  "italy": {
+    "countryCode": "IT",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [
+      ["Rome", [12.4964, 41.9028], "IT-62"],
+      ["Milan", [9.19, 45.4642], "IT-25"],
+      ["Naples", [14.2681, 40.8518], "IT-72"],
+      ["San Marino", [12.4473, 43.9367], "SM", "SM"],
+      ["Vatican City", [12.4534, 41.9022], "VA", "VA"]
+    ],
+    "nearbySamples": [
+      ["Colosseum", [12.4923, 41.8902], "landmark", "Colosseo"],
+      ["Roma Termini", [12.5018, 41.901], "station", "Termini"],
+      [
+        "Basilica di San Marino",
+        [12.446693573950643, 43.93714675],
+        "landmark",
+        "Basilica di San Marino",
+        "SM"
+      ],
+      [
+        "Saint Peters Basilica",
+        [12.4539, 41.9022],
+        "landmark",
+        "San Pietro",
+        "VA"
+      ]
+    ],
+    "countryCodes": ["IT", "SM", "VA"],
+    "countryNames": {
+      "IT": "Italy",
+      "SM": "San Marino",
+      "VA": "Vatican City"
+    }
+  },
+  "romania": {
+    "countryCode": "RO",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Bucharest", [26.1025, 44.4268], "RO-B"]],
+    "nearbySamples": [
+      ["Romanian Athenaeum", [26.0971, 44.4413], "landmark", "Ateneul"]
+    ]
+  }
+}

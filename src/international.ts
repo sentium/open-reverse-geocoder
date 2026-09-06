@@ -7,6 +7,7 @@ import { NearbyOptions, NearbyResult, MultiPolygon } from './nearby-types'
 import { LngLat, tileAt, tileKey, validatePosition } from './spatial'
 import {
   loadJson,
+  tileUrl,
   loadTileIndex,
   SearchDataError,
   SearchCoverageError,
@@ -229,6 +230,7 @@ export async function reverseGeocode(
     )
     .sort((a, b) => a.id.localeCompare(b.id))
   let coverageError: SearchCoverageError | undefined
+  let unresolved: GlobalReverseGeocodingResult | undefined
   for (const region of candidates) {
     const dataUrl = `${root}/${region.id}`
     const base = `${dataUrl}/${region.version}`
@@ -240,11 +242,15 @@ export async function reverseGeocode(
     )
       throw new SearchDataError('Catalog and dataset version do not match')
     if (!polygonContains(manifest.coverageGeometry, position)) continue
-    const tile = tileAt(position, 8),
+    const adminZoom = manifest.adminZoom ?? 8
+    const tile = tileAt(position, adminZoom),
       key = tileKey(tile)
     const index = await loadTileIndex(manifest, base, [tile])
     const admin = index.adminTiles.includes(key)
-      ? await loadJson(`${base}/admin/8/${key}.json`, validateAdminTile)
+      ? await loadJson(
+          tileUrl(base, `admin/${adminZoom}/${key}`, manifest),
+          validateAdminTile,
+        )
       : { areas: [] }
     const areas = admin.areas
       .filter((a) => polygonContains(a.geometry, position))
@@ -275,7 +281,7 @@ export async function reverseGeocode(
       }
       throw error
     }
-    return {
+    const result: GlobalReverseGeocodingResult = {
       source: 'osm',
       countryCode: country?.countryCode ?? null,
       countryName: country?.name ?? null,
@@ -292,6 +298,12 @@ export async function reverseGeocode(
       dataVersion: manifest.version,
       attribution: manifest.attribution,
     }
+    // An overlapping extract can contain local areas but lack the country's
+    // boundary (e.g. Northern Ireland in an Ireland extract). Prefer another
+    // extract that can identify the country; retain partial results if none can.
+    if (country?.countryCode || options.region) return result
+    if (!unresolved) unresolved = result
   }
+  if (unresolved) return unresolved
   throw coverageError ?? new UnsupportedRegionError()
 }

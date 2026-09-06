@@ -2,7 +2,7 @@
 const fs = require('node:fs/promises')
 const path = require('node:path')
 const { validateOsm } = require('./validate-osm-data')
-async function prepare(root) {
+async function prepare(root, expectedRegions) {
   const regions = []
   for (const entry of await fs.readdir(root, { withFileTypes: true })) {
     if (!entry.isDirectory() || !/^[A-Za-z0-9_-]{1,80}$/.test(entry.name))
@@ -22,6 +22,12 @@ async function prepare(root) {
     )
   }
   if (!regions.length) throw new Error('No datasets')
+  if (
+    expectedRegions &&
+    JSON.stringify(regions.map((r) => r.id).sort()) !==
+      JSON.stringify([...expectedRegions].sort())
+  )
+    throw new Error('Generated regions do not match the requested set')
   const catalog = {
     schemaVersion: 1,
     regions: regions.sort((a, b) => a.id.localeCompare(b.id)),

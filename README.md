@@ -188,7 +188,7 @@ npm run test:integration
 - https://maps.gsi.go.jp/help/pdf/vector/dataspec.pdf
 - https://maps.gsi.go.jp/help/pdf/vector/attribute.pdf
 - https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
-# 国外の検索（初回公開対象：米国）
+# 国外の検索
 
 `reverseGeocode` は国内・国外で共通のAPIです。日本は従来の行政区域データ（国土数値情報）と近傍データ（国土地理院）を使い、
 国外は公開済みのOSMデータを使います。既存の `openReverseGeocoder` と `searchNearby`
@@ -232,7 +232,8 @@ console.log(result.attribution)        // 利用画面等での出典表示に�
 `place-of-worship`（宗教施設）です。出口は `ic`、サービス施設は `sa`、休憩所は `pa`
 に対応付けています。名称がない出口は番号がある場合 `Exit 10` のように返します。
 
-APIと座標処理は世界対応ですが、データの初回公開は米国50州とDCからです（海外領土は対象外）。実際の公開範囲・版は
+APIと座標処理は世界対応です。生成対象は米国50州とDC（海外領土は対象外）、台湾、韓国、インドネシア、インド、ベトナム、フィリピン、タイです。
+追加地域も全国生成・検索検証・公開が完了してから利用できます。実際の公開範囲・版は
 `https://sentium.github.io/open-reverse-geocoder/osm/catalog.json` で確認できます。
 カタログの公開前は利用できません。未公開地域は `UnsupportedRegionError`、通信失敗や
 掲載タイルの欠損は `SearchDataError` として区別します。
@@ -262,8 +263,9 @@ node bin/download-osm-data.js https://sentium.github.io/open-reverse-geocoder/os
 [国際検索の設計](design/international-search.md)を参照してください。
 `npm run test:osm` は実際のOSM施設データを使う結合テストを含みます。
 
-この変更のマージ後、および各生成スクリプト・ワークフローのmainへの変更時に、国内・米国それぞれの全国生成を自動実行します。
-手動では `Update OSM data` を既定ブランチで `publish=true`、国内は `Update search data` を
+各生成スクリプト・ワークフローのmainへの変更時に、対応する国内・国外の全国生成を自動実行します。
+国外は `bin/osm-regions.json` の全対象国を生成します。
+手動では `Update OSM data` を既定ブランチで `region=all, publish=true`、国内は `Update search data` を
 `scope=japan, publish=true` として実行します。以後は四半期ごとにも更新します。
 国内の全国生成成果物と国外生成成果物が両方揃うと `Publish search datasets` が
 両方を検証してまとめてPagesへ配置します。片方がまだない場合は公開を保留し、後続の生成完了時に再判定します。
@@ -273,3 +275,64 @@ node bin/download-osm-data.js https://sentium.github.io/open-reverse-geocoder/os
 2026-09-06の米国全国生成では、配信用JSONと索引は約444 MB、施設点は約55.8万件でした。
 5都市の行政地名と駅・名所・高速道路出口の実データ検証に成功しています。
 時間・容量・検証地点の詳細は[設計書の実測結果](design/international-search.md#米国全体での検証結果2026-09-06)に記録しています。
+
+### 国・地域の追加とプレビュー検証
+
+`bin/osm-regions.json` に Geofabrik の地域ID・国コード・行政地名と近傍施設の検証地点を設定します。
+境界補完は国別の `boundaryConfig` を指定します。米国50州とDC、台湾22県市の境界を確認し、
+抽出データに欠ける境界は完全なOSM relationから補完します。台湾の実データでは高雄市の補完が必要でした。
+取得元の抽出範囲と国コードを照合し、国別の生成物をまとめてカタログを検証します。
+詳細な行政界が1タイルの上限を超える台湾・韓国は `adminZoom=10` で分割します。
+境界形状を簡略化せず、米国は従来のz8を維持します。追加国の読込にはこの変更を含むライブラリが必要です。
+取得元・PBFヘッダ・入力ハッシュ・境界補完履歴は `{region}/{version}/provenance/`、
+全地域の検索結果はルートの `verification.json` に保存します。
+
+```sh
+# 台湾だけをローカル生成・検証（出力先は新規ディレクトリ）
+node bin/build-osm-regions.js --region taiwan --source tmp/taiwan-source --output tmp/taiwan-data --version taiwan-preview-1
+# 韓国は --region south-korea、インドは --region india
+# 欧州グループは --region europe、中南米は --region americas、全対象は --region all
+```
+
+Actionsは国別に最大4並列で生成し、指定した全地域が揃ってからカタログを構成・検証します。
+単独地域やグループの生成はプレビュー専用です。
+`source_run` で以前の `osm-build-input` / `osm-build-input-{region}` を使う場合も公開できません。
+旧形式の米国入力を再利用する場合は `region=us` を指定します。
+公開には `region=all` で全対象国の新しいスナップショットを取得し、全地域の検証に成功する必要があります。
+単独地域の更新で既存の国がカタログから消えることを防ぎます。国内との合計容量が既存のPages上限を
+超えた場合も公開を停止し、既存サイトを保持します。
+
+
+| 対象 | `region` | 国コード | タイル保存形式 |
+| --- | --- | --- | --- |
+| 米国 | `us` | US | JSON gzip |
+| 台湾 | `taiwan` | TW | JSON gzip |
+| 韓国 | `south-korea` | KR | JSON gzip |
+| インドネシア | `indonesia` | ID | JSON gzip |
+| インド | `india` | IN | JSON gzip |
+| ベトナム | `vietnam` | VN | JSON gzip |
+| フィリピン | `philippines` | PH | JSON gzip |
+| タイ | `thailand` | TH | JSON gzip |
+| ブラジル | `brazil` | BR | JSON gzip |
+| メキシコ | `mexico` | MX | JSON gzip |
+| ドイツ | `germany` | DE | JSON gzip |
+| イタリア | `italy` | IT, SM, VA | JSON gzip |
+| ルーマニア | `romania` | RO | JSON gzip |
+
+欧州はドイツ・イタリア・ルーマニアに限定し、OSMは合計13抽出地域を生成します。範囲と検証状況は
+[欧州・中南米への拡張](design/europe-expansion.md)を参照してください。生成対象と公開済み範囲は異なり、
+実際に利用できる地域は配信カタログに記載されます。
+
+全OSM地域の新規生成では、行政界・施設・道路タイルを `.json.gz` として保存し、manifest の
+`tileCompression: "gzip"` で識別します。カタログ・manifest・索引は通常のJSONです。
+ライブラリが解凍するため、配信側で特別なContent-Encoding設定は不要です。
+解凍量・JSONの文字列サイズに上限を設け、gzipのチェックサム・長さも検証します。
+既存の非圧縮データもそのまま読み込めます。gzip配信にはこの変更を含むライブラリが必要です。
+全量ダウンロードツールもgzipファイルを取得・検証し、その形式のまま保存します。
+
+国内・OSMのデータはGitHub Pagesでまとめて配信します。R2の設定は不要です。
+検索時は必要な索引と周辺タイルのみ取得します。生成済みデータの合計は約875.4MBで、
+検索データ880MB・公開成果物全体900MBの容量チェックを通過した場合だけ公開します。
+
+インドネシアの原抽出は東ティモールを含みますが、公開カタログの国コードはIDです。
+東ティモールをインドネシアとして返すための範囲変更は行いません。

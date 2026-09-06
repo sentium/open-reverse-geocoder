@@ -1,23 +1,25 @@
 name: Update OSM data
+run-name: OSM data — ${{ inputs.region || 'all' }}
 
 on:
   push:
     branches: [main]
     paths:
-      - bin/build-osm-data.py
-      - bin/osm-export.json
-      - bin/osm-requirements.txt
-      - bin/complete-osm-boundaries.py
-      - bin/us-boundaries.json
+      - bin/*osm*
+      - bin/*boundaries*
       - .github/workflows/osm-data.yml
   workflow_dispatch:
     inputs:
       publish:
-        description: Publish the US dataset from main after validation
+        description: Publish all configured regions from main after validation
         type: boolean
         default: false
+      region:
+        description: all, europe, americas, or a region ID (groups/regions are previews)
+        type: string
+        default: all
       source_run:
-        description: Reuse osm-build-input from a prior run for preview validation only
+        description: Source run ID, or JSON mapping region/group IDs to run IDs (preview only)
         type: string
         default: ''
   schedule:
@@ -28,13 +30,49 @@ permissions:
   actions: read
 
 concurrency:
-  group: osm-data-${{ github.ref }}
+  group: osm-data-${{ github.ref }}-${{ inputs.region || 'all' }}
   cancel-in-progress: false
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      regions: ${{ steps.plan.outputs.regions }}
+      matrix: ${{ steps.plan.outputs.matrix }}
+      single: ${{ steps.plan.outputs.single }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci && npm run build
+      - id: plan
+        env:
+          PUBLISH: ${{ inputs.publish }}
+          REGION: ${{ inputs.region || 'all' }}
+          SOURCE_RUN: ${{ inputs.source_run }}
+        run: |
+          node <<'JS'
+          const fs = require('node:fs')
+          const { selectRegions, selectSources } = require('./bin/build-osm-regions')
+          const { REGION, SOURCE_RUN, PUBLISH } = process.env
+          const regions = selectRegions(REGION)
+          const matrix = selectSources(regions, SOURCE_RUN)
+          if (PUBLISH === 'true' && (REGION !== 'all' || SOURCE_RUN))
+            throw new Error('Publication requires fresh snapshots of all configured regions')
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `regions=${JSON.stringify(regions)}\nsingle=${regions.length === 1}\n`)
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `matrix=${JSON.stringify(matrix)}\n`)
+          JS
   generate:
+    needs: plan
     runs-on: ubuntu-latest
     timeout-minutes: 330
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -47,64 +85,98 @@ jobs:
       - run: npm ci && npm run build
       - run: pip install -r bin/osm-requirements.txt
       - run: sudo apt-get update && sudo apt-get install -y osmium-tool
-      - name: Reject publication of reused preview input
-        if: inputs.source_run && inputs.publish
+      - id: source
+        if: matrix.source_run != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN: ${{ matrix.source_run }}
+          REGION: ${{ matrix.region }}
         run: |
-          echo 'Reused build inputs are for preview validation only. A publish build must download its own snapshot.'
-          exit 1
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN/artifacts?per_page=100" > tmp-source-artifacts.json
+          node <<'JS'
+          const fs = require('node:fs')
+          const names = JSON.parse(fs.readFileSync('tmp-source-artifacts.json')).flatMap(page => page.artifacts).filter(a => !a.expired).map(a => a.name)
+          const name = ['osm-build-input-' + process.env.REGION, 'osm-build-input'].find(n => names.includes(n))
+          if (!name) throw new Error('Missing reusable source artifact')
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `name=${name}\n`)
+          JS
       - uses: actions/download-artifact@v4
-        if: inputs.source_run
+        if: matrix.source_run != ''
         with:
-          name: osm-build-input
-          run-id: ${{ inputs.source_run }}
+          name: ${{ steps.source.outputs.name }}
+          run-id: ${{ matrix.source_run }}
           github-token: ${{ github.token }}
           path: tmp/osm-source
-      - name: Download and filter the US snapshot
-        if: ${{ !inputs.source_run }}
+      - name: Generate and verify region
+        env:
+          REGION: ${{ matrix.region }}
+          SOURCE_RUN: ${{ matrix.source_run }}
         run: |
-          mkdir -p tmp/osm-source
-          curl --fail --silent --show-error --location --retry 3 --output tmp/osm-source/regions.json https://download.geofabrik.de/index-v1.json
-          node -e 'const fs=require("fs");const f=JSON.parse(fs.readFileSync("tmp/osm-source/regions.json")).features.find(f=>f.properties.id==="us");if(!f)throw Error("US extract missing");fs.writeFileSync("tmp/osm-source/region.json",JSON.stringify(f))'
-          curl --fail --silent --show-error --location --retry 3 --max-time 14400 --output tmp/osm-source/us.osm.pbf https://download.geofabrik.de/north-america/us-latest.osm.pbf
-          sha256sum tmp/osm-source/us.osm.pbf > tmp/osm-source/SHA256SUMS
-          osmium fileinfo tmp/osm-source/us.osm.pbf > tmp/osm-source/snapshot.txt
-          osmium tags-filter tmp/osm-source/us.osm.pbf nwr/railway=station,halt nwr/highway=motorway,motorway_junction,services,rest_area nwr/tourism=attraction,museum,gallery,zoo,viewpoint nwr/historic nwr/leisure=park nwr/amenity=place_of_worship wr/boundary=administrative -o tmp/osm-source/filtered.osm.pbf
-          rm tmp/osm-source/us.osm.pbf
-          osmium export tmp/osm-source/filtered.osm.pbf -c bin/osm-export.json -f geojsonseq -o tmp/osm-source/features.geojsonseq --show-errors 2> tmp/osm-source/geometry-errors.log
-          rm tmp/osm-source/filtered.osm.pbf
-      - name: Complete missing US state boundaries from OSM
-        run: |
-          python bin/complete-osm-boundaries.py --input tmp/osm-source/features.geojsonseq --config bin/us-boundaries.json
-          sha256sum tmp/osm-source/features.geojsonseq > tmp/osm-source/EXPORT-SHA256SUMS
-      - uses: actions/upload-artifact@v4
-        with:
-          name: osm-build-input
-          path: |
-            tmp/osm-source/features.geojsonseq
-            tmp/osm-source/region.json
-            tmp/osm-source/SHA256SUMS
-            tmp/osm-source/snapshot.txt
-            tmp/osm-source/geometry-errors.log
-            tmp/osm-source/boundary-sources.json
-            tmp/osm-source/EXPORT-SHA256SUMS
-          retention-days: 7
-      - name: Build immutable US dataset
-        run: |
-          python bin/build-osm-data.py --input tmp/osm-source/features.geojsonseq --region-file tmp/osm-source/region.json --version "run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --source-revision "$(cat tmp/osm-source/SHA256SUMS tmp/osm-source/EXPORT-SHA256SUMS)" --output tmp/osm-data
-          node bin/prepare-osm-catalog.js tmp/osm-data
-          node bin/check-osm-samples.js tmp/osm-data
-          cp tmp/osm-source/snapshot.txt tmp/osm-source/SHA256SUMS tmp/osm-source/geometry-errors.log tmp/osm-data/
-          cp tmp/osm-source/EXPORT-SHA256SUMS tmp/osm-data/
-          if [ -f tmp/osm-source/boundary-sources.json ]; then cp tmp/osm-source/boundary-sources.json tmp/osm-data/; fi
+          args=()
+          if [ -n "$SOURCE_RUN" ]; then args+=(--reuse-input); fi
+          node bin/build-osm-regions.js --region "$REGION" --source tmp/osm-source --output tmp/osm-data --version "run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${args[@]}"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: osm-data-preview
-          path: tmp/osm-data
+          name: ${{ needs.plan.outputs.single == 'true' && 'osm-build-input' || format('osm-build-input-{0}', matrix.region) }}
+          path: |
+            tmp/osm-source/**/features.geojsonseq
+            tmp/osm-source/**/region.json
+            tmp/osm-source/**/generation-region.json
+            tmp/osm-source/**/SHA256SUMS
+            tmp/osm-source/**/snapshot.txt
+            tmp/osm-source/**/geometry-errors.log
+            tmp/osm-source/**/boundary-sources.json
+            tmp/osm-source/**/EXPORT-SHA256SUMS
           if-no-files-found: ignore
           retention-days: 7
       - uses: actions/upload-artifact@v4
-        if: github.ref_name == github.event.repository.default_branch && (github.event_name == 'schedule' || github.event_name == 'push' || inputs.publish)
+        if: always()
+        with:
+          name: ${{ needs.plan.outputs.single == 'true' && 'osm-data-preview' || format('osm-data-preview-{0}', matrix.region) }}
+          path: tmp/osm-data
+          if-no-files-found: ignore
+          retention-days: 7
+  assemble:
+    needs: [plan, generate]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci && npm run build
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: osm-data-preview*
+          merge-multiple: true
+          path: tmp/osm-data
+      - name: Verify complete group and cross-region search
+        env:
+          EXPECTED_REGIONS: ${{ needs.plan.outputs.regions }}
+        run: |
+          node <<'JS'
+          const fs = require('node:fs/promises')
+          const { prepare } = require('./bin/prepare-osm-catalog')
+          const { check } = require('./bin/check-osm-samples')
+          async function main() {
+            const root = 'tmp/osm-data'
+            const report = await prepare(root, JSON.parse(process.env.EXPECTED_REGIONS))
+            await check(root)
+            await fs.writeFile(root + '/validation.json', JSON.stringify(report, null, 2))
+            console.log(JSON.stringify(report, null, 2))
+          }
+          main().catch(e => { console.error(e); process.exitCode = 1 })
+          JS
+      - uses: actions/upload-artifact@v4
+        if: needs.plan.outputs.single != 'true'
+        with:
+          name: osm-data-preview
+          path: tmp/osm-data
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        if: github.ref_name == github.event.repository.default_branch && !inputs.source_run && (inputs.region == '' || inputs.region == 'all') && (github.event_name == 'schedule' || github.event_name == 'push' || inputs.publish)
         with:
           name: osm-pages-data
           path: tmp/osm-data

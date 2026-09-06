@@ -11,9 +11,9 @@
     "typecheck": "tsc --noEmit",
     "build:data": "node bin/build-search-data.js",
     "validate:data": "node bin/validate-search-data.js",
-    "test:data": "node --test test/search-data.test.js",
+    "test:data": "node --test test/search-data.test.js test/data-artifacts.test.js",
     "test:integration": "node --test test/integration.test.js",
-    "test:osm": "python3 test/osm-data.test.py && node --test test/osm-integration.test.js",
+    "test:osm": "python3 test/osm-data.test.py && node --test test/osm-integration.test.js test/osm-regions.test.js",
     "validate:osm": "node bin/validate-osm-data.js"
   },
   "author": "",
@@ -63,6 +63,7 @@
     "axios": "^0.21.1",
     "axios-cache-adapter": "^2.7.3",
     "d3-geo": "^2.0.1",
+    "fflate": "^0.8.3",
     "global-mercator": "^3.1.0",
     "pbf": "^3.2.1"
   },

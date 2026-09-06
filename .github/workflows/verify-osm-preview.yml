@@ -1,0 +1,88 @@
+name: Verify OSM preview
+on:
+  workflow_call:
+    inputs:
+      source_run:
+        description: Run containing all configured osm-data-preview-{region} artifacts
+        type: string
+        required: true
+      japan_source_run:
+        description: Optional run containing gsi-pages-data for a complete Pages capacity check
+        type: string
+        default: ''
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: osm-preview-verification-${{ github.ref }}-${{ inputs.source_run }}
+  cancel-in-progress: false
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci && npm run build
+      - name: Download configured regional artifacts across API pages
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_RUN: ${{ inputs.source_run }}
+        run: |
+          [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]]
+          node <<'JS'
+          const { execFileSync } = require('node:child_process')
+          const { selectRegions } = require('./bin/build-osm-regions')
+          for (const region of selectRegions()) {
+            const name = 'osm-data-preview-' + region
+            execFileSync('gh', ['run', 'download', process.env.SOURCE_RUN,
+              '--repo', process.env.GITHUB_REPOSITORY, '--name', name,
+              '--dir', 'tmp/osm-previews/' + name], { stdio: 'inherit' })
+          }
+          JS
+      - name: Verify full files and automatic region selection with current code
+        run: |
+          node <<'JS'
+          const fs = require('node:fs/promises')
+          const assert = require('node:assert/strict')
+          const { selectRegions } = require('./bin/build-osm-regions')
+          const { prepare } = require('./bin/prepare-osm-catalog')
+          const { check } = require('./bin/check-osm-samples')
+          async function main() {
+            const root = 'tmp/osm-data'
+            const regions = selectRegions()
+            assert.deepEqual((await fs.readdir('tmp/osm-previews')).sort(), regions.map(id => 'osm-data-preview-' + id).sort())
+            await fs.mkdir(root)
+            for (const id of regions)
+              await fs.rename('tmp/osm-previews/osm-data-preview-' + id + '/' + id, root + '/' + id)
+            const report = await prepare(root, regions)
+            await check(root)
+            await fs.writeFile(root + '/validation.json', JSON.stringify(report, null, 2))
+            console.log(JSON.stringify(report, null, 2))
+          }
+          main().catch(e => { console.error(e); process.exitCode = 1 })
+          JS
+      - name: Download domestic data for Pages assembly
+        if: inputs.japan_source_run != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JAPAN_SOURCE_RUN: ${{ inputs.japan_source_run }}
+        run: |
+          [[ "$JAPAN_SOURCE_RUN" =~ ^[0-9]+$ ]]
+          gh run download "$JAPAN_SOURCE_RUN" --repo "$GITHUB_REPOSITORY" --name gsi-pages-data --dir tmp/japan
+      - name: Verify complete Pages payload against both capacity budgets
+        if: inputs.japan_source_run != ''
+        run: node bin/assemble-pages.js tmp/japan tmp/osm-data tmp/pages
+      - uses: actions/upload-artifact@v4
+        if: inputs.japan_source_run != ''
+        with:
+          name: pages-capacity-report
+          path: tmp/pages/datasets.json
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: osm-data-preview
+          path: tmp/osm-data
+          retention-days: 7

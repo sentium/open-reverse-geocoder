@@ -8,6 +8,7 @@ import argparse
 import collections
 import datetime
 import json
+import gzip
 import math
 from pathlib import Path
 import re
@@ -129,7 +130,11 @@ def road_width(tags):
 
 
 class Builder:
-    def __init__(self, stage, coverage, country_names=None):
+    def __init__(self, stage, coverage, country_names=None, admin_zoom=8, compress=False):
+        self.compress = compress
+        if type(admin_zoom) is not int or not 8 <= admin_zoom <= 12:
+            raise ValueError("Administrative zoom must be an integer from 8 to 12")
+        self.admin_zoom = admin_zoom
         self.stage = stage
         self.coverage = coverage
         self.country_names = country_names or {}
@@ -148,6 +153,8 @@ class Builder:
         kinds = ('Polygon', 'LineString')
         for kind in kinds:
             for part in components(geometry, kind):
+                if part.is_empty:
+                    continue
                 w, s, e, n = part.bounds
                 x0, y0 = tile_at(w, n, zoom)
                 x1, y1 = tile_at(e, s, zoom)
@@ -179,12 +186,17 @@ class Builder:
             if country == 'JP': return
             # Coalesce all pieces of an area within a tile (islands and holes).
             cells = collections.defaultdict(list)
-            for x, y, clipped in self.tiled(geometry.intersection(self.coverage), 8):
+            for x, y, clipped in self.tiled(geometry.intersection(self.coverage), self.admin_zoom):
                 cells[x, y].extend(components(clipped, 'Polygon'))
+            written = False
             for (x, y), polys in cells.items():
-                self.put('admin', 8, x, y, identifier, dict(id=identifier, level=int(tags['admin_level']), name=name, code=code, countryCode=country, geometry=as_multipolygon(unary_union(polys))))
+                # An area may only touch a tile edge/corner. That intersection
+                # is a line/point, not an administrative polygon for this tile.
+                if not polys: continue
+                self.put('admin', self.admin_zoom, x, y, identifier, dict(id=identifier, level=int(tags['admin_level']), name=name, code=code, countryCode=country, geometry=as_multipolygon(unary_union(polys))))
+                written = True
             self.stats['administrativeAreas'] += 1
-            if country and cells: self.stats['country:' + country] += 1
+            if country and written: self.stats['country:' + country] += 1
         if is_road:
             number = 0
             for x, y, clipped in self.tiled(geometry.intersection(self.coverage), 14):
@@ -210,15 +222,15 @@ class Builder:
         # envelope, and expose a clearly derived ID rather than an OSM relation ID.
         missing = {code: name for code, name in self.country_names.items() if not self.stats['country:' + code]}
         if not missing: return
-        tiles = list(self.db.execute("SELECT DISTINCT x,y FROM records WHERE kind='admin' AND z=8"))
+        tiles = list(self.db.execute("SELECT DISTINCT x,y FROM records WHERE kind='admin' AND z=?", (self.admin_zoom,)))
         found = set()
         for x,y in tiles:
-            areas = [json.loads(row[0]) for row in self.db.execute("SELECT value FROM records WHERE kind='admin' AND z=8 AND x=? AND y=?", (x,y))]
+            areas = [json.loads(row[0]) for row in self.db.execute("SELECT value FROM records WHERE kind='admin' AND z=? AND x=? AND y=?", (self.admin_zoom,x,y))]
             for code,name in missing.items():
                 parts = [shape(a['geometry']) for a in areas if a['level'] > 2 and isinstance(a['code'], str) and a['code'].startswith(code + '-')]
                 if not parts: continue
                 identifier = 'osm-derived:country:' + code
-                self.put('admin',8,x,y,identifier,dict(id=identifier,level=2,name=name,code=code,countryCode=code,geometry=as_multipolygon(unary_union(parts))))
+                self.put('admin',self.admin_zoom,x,y,identifier,dict(id=identifier,level=2,name=name,code=code,countryCode=code,geometry=as_multipolygon(unary_union(parts))))
                 found.add(code)
         for code in found:
             self.stats['country:' + code] += 1
@@ -229,7 +241,9 @@ class Builder:
         self.derive_countries()
         self.db.commit()
         shards = collections.defaultdict(lambda: dict(schemaVersion=1, poiTiles=[], roadTiles=[], adminTiles=[]))
-        sizes = collections.Counter()
+        # Small countries can legitimately have no motorway segments.
+        # Keep explicit zero counts in the manifest for client validation.
+        sizes = collections.Counter(points=0, roads=0, areas=0, tileBytes=0)
         for kind, z, x, y in self.db.execute('SELECT DISTINCT kind,z,x,y FROM records ORDER BY kind,z,x,y'):
             records = [json.loads(row[0]) for row in self.db.execute('SELECT value FROM records WHERE kind=? AND z=? AND x=? AND y=? ORDER BY id', (kind,z,x,y))]
             label = {'poi': 'points', 'road': 'roads', 'admin': 'areas'}[kind]
@@ -239,9 +253,13 @@ class Builder:
             content = dump(value)
             if len(content) * 2 > 16 * 1024 * 1024:
                 raise ValueError(f'Tile exceeds client memory budget: {kind}/{z}/{x}/{y}')
-            dest.write_text(content, encoding='utf8')
+            encoded = content.encode('utf8')
+            if self.compress:
+                encoded = gzip.compress(encoded, compresslevel=6, mtime=0)
+                dest = dest.with_suffix('.json.gz')
+            dest.write_bytes(encoded)
             sizes[label] += len(records)
-            sizes['tileBytes'] += len(content.encode('utf8'))
+            sizes['tileBytes'] += len(encoded)
             shard = f'{x // 2 ** (z - 6)}/{y // 2 ** (z - 6)}'
             shards[shard][kind + 'Tiles'].append(f'{x}/{y}')
         self.db.close()
@@ -254,7 +272,7 @@ class Builder:
         return sorted(shards)
 
 
-def build(sequence, region_file, output, version, source_revision, region_id=None):
+def build(sequence, region_file, output, version, source_revision, region_id=None, admin_zoom=8, compress=False, country_name=None):
     if not re.fullmatch('[A-Za-z0-9_-]{1,80}', version): raise ValueError('Invalid version')
     region = json.loads(Path(region_file).read_text())
     properties = region['properties']
@@ -269,8 +287,12 @@ def build(sequence, region_file, output, version, source_revision, region_id=Non
     if dest.exists(): raise ValueError('Immutable version already exists')
     region_root.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix='.building-', dir=region_root))
-    country_names = {code: properties.get('name', code) if len(codes) == 1 else code for code in codes}
-    builder = Builder(stage, coverage, country_names)
+    country_names = {code: (country_name or properties.get('name', code)) if len(codes) == 1 else code for code in codes}
+    for code, name in properties.get('countryNames', {}).items():
+        if code not in codes or not isinstance(name, str) or not name:
+            raise ValueError('Invalid explicit country name')
+        country_names[code] = name
+    builder = Builder(stage, coverage, country_names, admin_zoom, compress)
     try:
         with open(sequence, encoding='utf8') as stream:
             for i, line in enumerate(stream, 1):
@@ -285,6 +307,8 @@ def build(sequence, region_file, output, version, source_revision, region_id=Non
             x0,y0 = tile_at(w,n,12); x1,y1 = tile_at(e,s,12)
             rectangles.append([x0,y0,x1,y1])
         manifest = dict(schemaVersion=2, version=version, generatedAt=datetime.datetime.now(datetime.timezone.utc).isoformat(), source=properties.get('urls', {}).get('pbf', 'OpenStreetMap'), sourceRevision=source_revision, attribution=ATTRIBUTION, license='ODbL-1.0', licenseUrl=LICENSE_URL, coverage=rectangles, coverageGeometry=as_multipolygon(coverage), poiTiles=[], roadTiles=[], indexTiles=indexes, stats=dict(builder.stats))
+        if admin_zoom != 8: manifest['adminZoom'] = admin_zoom
+        if compress: manifest['tileCompression'] = 'gzip'
         (stage / 'manifest.json').write_text(dump(manifest), encoding='utf8')
         (stage / 'LICENSE.txt').write_text(f'{ATTRIBUTION}\nThis OpenStreetMap-derived database is available under the Open Database License 1.0.\n{LICENSE_URL}\nDownload this version directory to obtain the machine-readable derived database.\n', encoding='utf8')
         entry = dict(id=region_id, version=version, countryCodes=codes, bounds=bounds)
@@ -312,5 +336,8 @@ if __name__ == '__main__':
     parser.add_argument('--version', required=True)
     parser.add_argument('--source-revision', required=True, help='PBF snapshot timestamp and/or SHA-256')
     parser.add_argument('--region-id')
+    parser.add_argument('--country-name', help='Country label for ISO-derived fallback in single-country extracts')
+    parser.add_argument('--compress', action='store_true')
+    parser.add_argument('--admin-zoom', type=int, default=8, choices=range(8, 13))
     args = parser.parse_args()
-    build(args.input, args.region_file, args.output, args.version, args.source_revision, args.region_id)
+    build(args.input, args.region_file, args.output, args.version, args.source_revision, args.region_id, args.admin_zoom, args.compress, args.country_name)

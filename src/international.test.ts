@@ -4,7 +4,7 @@ import {
   UnsupportedRegionError,
   validateCatalog,
 } from './international'
-import { clearNearbyCache } from './search-data'
+import { clearNearbyCache, validateManifest } from './search-data'
 import { MultiPolygon } from './nearby-types'
 import { polygonContains, polygonCoversTile } from './polygon'
 import { tileAt, tileKey, lineDistanceM } from './spatial'
@@ -120,6 +120,42 @@ const options = {
   osmDataUrl: root,
   nearby: { rules: [{ kind: 'station' as const, radiusM: 5000, priority: 1 }] },
 }
+test('reads finer administrative tiles using the manifest zoom', async () => {
+  const manifest = data.get(root + '/us/v1/manifest.json') as Record<
+    string,
+    unknown
+  >
+  data.set(root + '/us/v1/manifest.json', { ...manifest, adminZoom: 10 })
+  const index = data.get(root + `/us/v1/index/6/${key(6)}.json`) as Record<
+    string,
+    unknown
+  >
+  data.set(root + `/us/v1/index/6/${key(6)}.json`, {
+    ...index,
+    adminTiles: [key(10)],
+  })
+  data.set(
+    root + `/us/v1/admin/10/${key(10)}.json`,
+    data.get(root + `/us/v1/admin/8/${key(8)}.json`),
+  )
+  data.delete(root + `/us/v1/admin/8/${key(8)}.json`)
+  const result = await reverseGeocode(position, options)
+  expect(result.countryCode).toBe('US')
+  expect(result.nearby?.selected?.name).toBe('Union Station')
+  expect(get.mock.calls.some(([url]) => url.includes('/admin/8/'))).toBe(false)
+})
+test.each([null, 7, 13, 8.5, '10'])(
+  'rejects invalid administrative zoom %p',
+  (adminZoom) => {
+    const manifest = data.get(root + '/us/v1/manifest.json') as Record<
+      string,
+      unknown
+    >
+    expect(() => validateManifest({ ...manifest, adminZoom })).toThrow(
+      'Invalid sharded manifest',
+    )
+  },
+)
 test('global API returns containing administrative hierarchy and nearby station, with a pinned version', async () => {
   const result = await reverseGeocode(position, options)
   expect(result.countryCode).toBe('US')
@@ -330,5 +366,100 @@ test('automatic region selection tries a larger extract when a smaller one canno
   )
   await expect(
     reverseGeocode(position, { ...options, region: 'a-small' }),
+  ).rejects.toThrow('coverage')
+})
+
+test.each([false as const, options.nearby])(
+  'automatic selection prefers a known country over an overlapping partial extract (%p)',
+  async (nearby) => {
+    const catalog = data.get(root + '/catalog.json') as {
+      regions: { id: string; countryCodes: string[] }[]
+    }
+    catalog.regions.unshift({
+      ...catalog.regions[0],
+      id: 'a-partial',
+      countryCodes: ['IE'],
+    })
+    for (const [url, value] of [...data.entries()])
+      if (url.startsWith(root + '/us/'))
+        data.set(
+          url.replace('/us/', '/a-partial/'),
+          JSON.parse(JSON.stringify(value)),
+        )
+    const admin = data.get(root + `/a-partial/v1/admin/8/${key(8)}.json`) as {
+      areas: { level: number; name: string }[]
+    }
+    admin.areas = admin.areas.filter((a) => a.level !== 2)
+    admin.areas[0].name = 'Partial city'
+    const poi = data.get(root + `/a-partial/v1/poi/12/${key(12)}.json`) as {
+      points: [string, string, string, number, number][]
+    }
+    poi.points[0][2] = 'Partial station'
+
+    const selected = await reverseGeocode(position, { ...options, nearby })
+    expect(selected.countryCode).toBe('US')
+    expect(selected.administrativeAreas[1].name).toBe('Test city')
+    if (nearby) expect(selected.nearby?.selected?.name).toBe('Union Station')
+    const explicit = await reverseGeocode(position, {
+      ...options,
+      nearby,
+      region: 'a-partial',
+    })
+    expect(explicit.countryCode).toBeNull()
+    expect(explicit.administrativeAreas[0].name).toBe('Partial city')
+    if (nearby) expect(explicit.nearby?.selected?.name).toBe('Partial station')
+
+    clearNearbyCache()
+    data.delete(root + '/us/v1/manifest.json')
+    await expect(
+      reverseGeocode(position, { ...options, nearby }),
+    ).rejects.toThrow('Could not load')
+    clearNearbyCache()
+    catalog.regions.pop()
+    expect(
+      (await reverseGeocode(position, { ...options, nearby })).countryCode,
+    ).toBeNull()
+  },
+)
+
+test('small searches in narrow extracts do not require a whole POI tile, but still reject holes', async () => {
+  const manifest = data.get(root + '/us/v1/manifest.json') as {
+    coverageGeometry: MultiPolygon
+  }
+  const [x, y] = position
+  manifest.coverageGeometry = {
+    type: 'MultiPolygon',
+    coordinates: [
+      [
+        [
+          [x - 0.002, y - 0.002],
+          [x + 0.002, y - 0.002],
+          [x + 0.002, y + 0.002],
+          [x - 0.002, y + 0.002],
+          [x - 0.002, y - 0.002],
+        ],
+      ],
+    ],
+  }
+  const nearby = {
+    rules: [{ kind: 'station' as const, radiusM: 100, priority: 1 }],
+  }
+  expect(
+    polygonCoversTile(manifest.coverageGeometry, tileAt(position, 12)),
+  ).toBe(false)
+  expect(
+    (await reverseGeocode(position, { ...options, nearby })).nearby?.selected
+      ?.name,
+  ).toBe('Union Station')
+  clearNearbyCache()
+  manifest.coverageGeometry.coordinates[0].push([
+    [x + 0.0005, y + 0.0005],
+    [x + 0.0006, y + 0.0005],
+    [x + 0.0006, y + 0.0006],
+    [x + 0.0005, y + 0.0006],
+    [x + 0.0005, y + 0.0005],
+  ])
+  await expect(
+    reverseGeocode(position, { ...options, nearby }),
   ).rejects.toThrow('coverage')
 })

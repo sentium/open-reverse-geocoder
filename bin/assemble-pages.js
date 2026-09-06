@@ -37,7 +37,11 @@ async function assemble(japan, osm, destination) {
   })
   await fs.cp(osm, path.join(destination, 'osm'), { recursive: true })
   await fs.writeFile(path.join(destination, '.nojekyll'), '')
-  const report = { japan: domestic, osm: international, totalBytes }
+  const report = {
+    japan: domestic,
+    osm: international,
+    totalBytes,
+  }
   await fs.writeFile(
     path.join(destination, 'datasets.json'),
     JSON.stringify(report, null, 2),

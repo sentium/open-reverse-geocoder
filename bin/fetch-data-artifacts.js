@@ -7,11 +7,15 @@ const path = require('node:path')
 const repo = process.env.GITHUB_REPOSITORY
 if (!repo || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo))
   throw new Error('GITHUB_REPOSITORY is required')
-const api = (endpoint) =>
+const api = (endpoint, paginate = false) =>
   JSON.parse(
     execFileSync(
       'gh',
-      ['api', `repos/${repo}${endpoint ? '/' + endpoint : ''}`],
+      [
+        'api',
+        `repos/${repo}${endpoint ? '/' + endpoint : ''}`,
+        ...(paginate ? ['--paginate', '--slurp'] : []),
+      ],
       {
         encoding: 'utf8',
         maxBuffer: 10 * 1024 * 1024,
@@ -34,7 +38,8 @@ async function download(workflow, names, destination, required) {
       continue
     const artifacts = api(
       `actions/runs/${run.id}/artifacts?per_page=100`,
-    ).artifacts
+      true,
+    ).flatMap((page) => page.artifacts)
     const artifact = names
       .map((name) => artifacts.find((a) => a.name === name && !a.expired))
       .find(Boolean)

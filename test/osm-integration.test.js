@@ -12,7 +12,7 @@ const { buildDataset } = require('../bin/lib/search-data')
 const { prepare: prepareJapan } = require('../bin/prepare-pages')
 const { reverseGeocode, clearNearbyCache } = require('../dist/main')
 
-test('real Washington OSM PBF -> export -> tiled data -> HTTP global API; publication preserves Japan', async (t) => {
+async function integration(t, adminZoom, compress) {
   const tmp = await fs.mkdtemp(path.join(os.tmpdir(), 'osm-integration-'))
   const source = path.join(tmp, 'features.geojsonseq')
   execFileSync('osmium', [
@@ -76,6 +76,9 @@ test('real Washington OSM PBF -> export -> tiled data -> HTTP global API; public
       output,
       '--version',
       'fixture',
+      '--admin-zoom',
+      String(adminZoom),
+      ...(compress ? ['--compress'] : []),
       '--source-revision',
       '2026-09-06 Washington fixture; synthetic administrative polygons',
     ],
@@ -184,9 +187,21 @@ test('real Washington OSM PBF -> export -> tiled data -> HTTP global API; public
     ),
   )
   await fs.unlink(
-    path.join(output, 'test-us/fixture/poi/12', index.poiTiles[0] + '.json'),
+    path.join(
+      output,
+      'test-us/fixture/poi/12',
+      index.poiTiles[0] + (compress ? '.json.gz' : '.json'),
+    ),
   )
   await assert.rejects(
     assemble(japanSite, output, path.join(tmp, 'broken-site')),
   )
-})
+}
+
+for (const [adminZoom, compress] of [
+  [8, false],
+  [10, false],
+  [10, true],
+])
+  test(`real Washington OSM PBF -> z${adminZoom} admin tiles (gzip=${compress}) -> HTTP API and full download; publication preserves Japan`, (t) =>
+    integration(t, adminZoom, compress))

@@ -19,6 +19,23 @@ def polygon(w, s, e, n):
 
 
 class OsmDataTest(unittest.TestCase):
+    def test_tile_edge_contacts_do_not_create_empty_administrative_polygons(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            b = builder.Builder(Path(tmp), builder.normalize_geojson(polygon(0, 0, 1, 1)), {'IN': 'India'})
+            tags = {'@id': 1, '@type': 'relation', 'boundary': 'administrative', 'admin_level': '2', 'ISO3166-1:alpha2': 'IN', 'name': 'Synthetic country'}
+            b.add({'type': 'Feature', 'geometry': polygon(1, 0, 2, 1), 'properties': tags})
+            # Brazil's extract includes complete relations outside its exact
+            # footprint; their intersection is POLYGON EMPTY (NaN bounds).
+            b.add({'type': 'Feature', 'geometry': polygon(2, 0, 3, 1), 'properties': tags})
+            self.assertEqual(b.db.execute('SELECT COUNT(*) FROM records').fetchone()[0], 0)
+            self.assertEqual(b.stats['country:IN'], 0)
+            b.add({'type': 'Feature', 'geometry': polygon(0, 0, 1, 1), 'properties': tags})
+            areas = [shape(json.loads(row[0])['geometry']) for row in b.db.execute("SELECT value FROM records WHERE kind='admin'")]
+            self.assertTrue(areas)
+            self.assertTrue(all(not area.is_empty for area in areas))
+            self.assertAlmostEqual(builder.unary_union(areas).area, 1)
+            b.db.close()
+
     def test_missing_alaska_boundary_restored_using_real_osm_geometry(self):
         with gzip.open(Path(__file__).parent / 'fixtures/osm-alaska-boundary.json.gz') as f:
             alaska = json.load(f)
@@ -85,6 +102,24 @@ class OsmDataTest(unittest.TestCase):
             self.assertTrue(union.covers(builder.Point(-77.5,38.7)))
             self.assertFalse(union.covers(builder.Point(-77.1,38.7)))
             self.assertFalse(union.covers(builder.Point(-79,36)))
+            b.db.close()
+
+    def test_finer_admin_tiles_preserve_holes_and_derived_country(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            b = builder.Builder(Path(tmp), builder.normalize_geojson(polygon(125, 34, 128, 37)), {'KR': 'Korea'}, admin_zoom=10)
+            coast = polygon(125.5, 34.5, 127.5, 36.5)
+            coast['coordinates'].extend(polygon(126, 35, 126.2, 35.2)['coordinates'])
+            b.add({'type': 'Feature', 'geometry': coast, 'properties': {'@id': 4, '@type': 'relation', 'boundary': 'administrative', 'admin_level': '4', 'ISO3166-2': 'KR-46', 'name': 'Synthetic coast'}})
+            b.derive_countries()
+            countries = []
+            for z, x, y, raw in b.db.execute("SELECT z,x,y,value FROM records WHERE id='osm-derived:country:KR'"):
+                self.assertEqual(z, 10)
+                geometry = shape(json.loads(raw)['geometry'])
+                self.assertTrue(builder.tile_box(x, y, z).buffer(1e-10).covers(geometry))
+                countries.append(geometry)
+            restored = builder.unary_union(countries)
+            self.assertAlmostEqual(restored.symmetric_difference(shape(coast)).area, 0, places=10)
+            self.assertFalse(restored.covers(builder.Point(126.1, 35.1)))
             b.db.close()
 
     def test_stream_build_ids_shards_clipping_and_immutable_version(self):
