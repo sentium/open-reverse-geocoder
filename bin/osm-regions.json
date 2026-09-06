@@ -951,5 +951,43 @@
         "Василия|Покрова"
       ]
     ]
+  },
+  "armenia": {
+    "countryCode": "AM",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe-adjacent",
+    "administrativeSamples": [["Yerevan", [44.5136, 40.1812], "AM-ER"]],
+    "nearbySamples": [
+      [
+        "Saint Gregory Cathedral",
+        [44.5166, 40.1715],
+        "landmark",
+        "Գրիգոր|Gregory"
+      ]
+    ]
+  },
+  "azerbaijan": {
+    "countryCode": "AZ",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe-adjacent",
+    "administrativeSamples": [["Baku", [49.8671, 40.4093], "AZ-BA"]],
+    "nearbySamples": [
+      ["Maiden Tower", [49.837, 40.3662], "landmark", "[Qq]ız qalası"]
+    ]
+  },
+  "kazakhstan": {
+    "countryCode": "KZ",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe-adjacent",
+    "administrativeSamples": [
+      ["Astana", [71.4304, 51.1282], "KZ-71"],
+      ["Atyrau (west of Ural)", [51.885, 47.11], "KZ-23"]
+    ],
+    "nearbySamples": [
+      ["Baiterek", [71.4303, 51.1282], "landmark", "Бәйтерек|Байтерек|Baiterek"]
+    ]
   }
 }

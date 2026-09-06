@@ -23,10 +23,11 @@ test('region selection rejects unknown IDs and mismatched source metadata', () =
     'philippines',
     'thailand',
   ])
-  assert.equal(selectRegions().length, 62)
-  assert.equal(selectRegions('europe').length, 52)
+  assert.equal(selectRegions().length, 65)
+  assert.equal(selectRegions('europe').length, 55)
   assert.equal(selectRegions('europe-core').length, 45)
   assert.equal(selectRegions('europe-extra').length, 7)
+  assert.equal(selectRegions('europe-adjacent').length, 3)
   assert.deepEqual(selectRegions('americas'), ['brazil', 'mexico'])
   assert.deepEqual(selectRegions('taiwan'), ['taiwan'])
   assert.throws(() => selectRegions('../us'), /Unknown region/)
