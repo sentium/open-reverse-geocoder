@@ -1,0 +1,52 @@
+{
+  "us": {
+    "countryCode": "US",
+    "boundaryConfig": "us-boundaries.json",
+    "administrativeSamples": [
+      ["Washington", [-77.0065, 38.8977], "US-DC"],
+      ["New York", [-73.9772, 40.7527], "US-NY"],
+      ["San Francisco", [-122.3966, 37.7934], "US-CA"],
+      ["Anchorage", [-149.89, 61.222], "US-AK"],
+      ["Honolulu", [-157.8583, 21.3069], "US-HI"]
+    ],
+    "nearbySamples": [
+      ["Washington station", [-77.0065, 38.8977], "station", "Union Station"],
+      ["US Capitol", [-77.009, 38.8898], "landmark", "United States Capitol"],
+      [
+        "Washington motorway exit",
+        [-77.0140866, 38.8938824],
+        "highway",
+        "Exit 10"
+      ]
+    ]
+  },
+  "taiwan": {
+    "countryCode": "TW",
+    "administrativeSamples": [
+      ["Taipei", [121.517, 25.0478], "TW-TPE"],
+      ["Kaohsiung", [120.3014, 22.6395], "TW-KHH"],
+      ["Hualien", [121.601, 23.992], "TW-HUA"]
+    ],
+    "nearbySamples": [
+      [
+        "Taipei Main Station",
+        [121.517, 25.0478],
+        "station",
+        "臺北|台北|Taipei"
+      ],
+      ["Taipei 101", [121.565, 25.0338], "landmark", "101"]
+    ]
+  },
+  "south-korea": {
+    "countryCode": "KR",
+    "administrativeSamples": [
+      ["Seoul", [126.9707, 37.5547], "KR-11"],
+      ["Busan", [129.0403, 35.1152], "KR-26"],
+      ["Jeju", [126.5312, 33.4996], "KR-49"]
+    ],
+    "nearbySamples": [
+      ["Seoul Station", [126.9707, 37.5547], "station", "서울|Seoul"],
+      ["Gyeongbokgung", [126.977, 37.5796], "landmark", "경복궁|Gyeongbokgung"]
+    ]
+  }
+}
