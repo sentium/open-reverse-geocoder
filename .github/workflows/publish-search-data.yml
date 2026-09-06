@@ -29,7 +29,7 @@ jobs:
           if [ "$EVENT_NAME" = workflow_dispatch ]; then
             echo 'publish=true' >> "$GITHUB_OUTPUT"
           else
-            count=$(gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" --jq '[.[].artifacts[] | select(.expired == false and (.name == "gsi-pages-data" or .name == "osm-pages-data" or .name == "github-pages"))] | length')
+            count=$(gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" | jq '[.[].artifacts[] | select(.expired == false and (.name == "gsi-pages-data" or .name == "osm-pages-data" or .name == "github-pages"))] | length')
             if [ "$count" -gt 0 ]; then echo 'publish=true' >> "$GITHUB_OUTPUT"; fi
           fi
   assemble:
