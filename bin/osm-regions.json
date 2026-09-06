@@ -68,5 +68,90 @@
         "^헌릉$"
       ]
     ]
+  },
+  "indonesia": {
+    "countryCode": "ID",
+    "adminZoom": 10,
+    "administrativeSamples": [
+      ["Jakarta", [106.8303, -6.1767], "ID-JK"],
+      ["Surabaya", [112.7508, -7.2654], "ID-JI"],
+      ["Denpasar", [115.2167, -8.65], "ID-BA"]
+    ],
+    "nearbySamples": [
+      ["Gambir station", [106.8303, -6.1767], "station", "Gambir"],
+      [
+        "National Monument",
+        [106.82715, -6.1754],
+        "landmark",
+        "Monumen Nasional|Monas"
+      ]
+    ]
+  },
+  "india": {
+    "countryCode": "IN",
+    "adminZoom": 10,
+    "administrativeSamples": [
+      ["New Delhi", [77.2195, 28.6428], "IN-DL"],
+      ["Mumbai", [72.8355, 18.9402], "IN-MH"],
+      ["Bengaluru", [77.5692, 12.9783], "IN-KA"]
+    ],
+    "nearbySamples": [
+      [
+        "New Delhi station",
+        [77.2195, 28.6428],
+        "station",
+        "New Delhi|नई दिल्ली"
+      ],
+      ["India Gate", [77.2295, 28.6129], "landmark", "India Gate|इंडिया गेट"]
+    ]
+  },
+  "vietnam": {
+    "countryCode": "VN",
+    "adminZoom": 10,
+    "administrativeSamples": [
+      ["Hanoi", [105.8412, 21.025], "VN-HN"],
+      ["Ho Chi Minh City", [106.6778, 10.7822], "VN-SG"],
+      ["Da Nang", [108.2098, 16.071], "VN-DN"]
+    ],
+    "nearbySamples": [
+      ["Hanoi station", [105.8412, 21.025], "station", "Hà Nội|Hanoi"],
+      [
+        "Independence Palace",
+        [106.6953, 10.777],
+        "landmark",
+        "Độc Lập|Independence|Reunification"
+      ]
+    ]
+  },
+  "philippines": {
+    "countryCode": "PH",
+    "adminZoom": 10,
+    "administrativeSamples": [
+      ["Manila", [120.9826, 14.6054], "PH-00"],
+      ["Cebu", [123.9007, 10.3157], "PH-07"],
+      ["Davao", [125.6131, 7.0644], "PH-11"]
+    ],
+    "nearbySamples": [
+      ["Doroteo Jose station", [120.9826, 14.6054], "station", "Doroteo Jose"],
+      ["Rizal Monument", [120.976, 14.5818], "landmark", "Rizal"]
+    ]
+  },
+  "thailand": {
+    "countryCode": "TH",
+    "adminZoom": 10,
+    "administrativeSamples": [
+      ["Bangkok", [100.5172, 13.7383], "TH-10"],
+      ["Chiang Mai", [99.017, 18.783], "TH-50"],
+      ["Phuket", [98.389, 7.884], "TH-83"]
+    ],
+    "nearbySamples": [
+      [
+        "Hua Lamphong station",
+        [100.5172, 13.7383],
+        "station",
+        "หัวลำโพง|Hua Lamphong|กรุงเทพ"
+      ],
+      ["Wat Arun", [100.4887, 13.7437], "landmark", "อรุณ|Arun"]
+    ]
   }
 }

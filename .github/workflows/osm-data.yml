@@ -26,7 +26,18 @@ on:
       region:
         description: Generate all regions, or one region for preview only
         type: choice
-        options: [all, us, taiwan, south-korea]
+        options:
+          [
+            all,
+            us,
+            taiwan,
+            south-korea,
+            indonesia,
+            india,
+            vietnam,
+            philippines,
+            thailand,
+          ]
         default: all
       source_run:
         description: Reuse osm-build-input from a prior run for preview validation only
