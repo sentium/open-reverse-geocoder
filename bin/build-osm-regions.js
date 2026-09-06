@@ -12,13 +12,7 @@ const { check } = require('./check-osm-samples')
 
 function selectRegions(region = 'all') {
   if (region === 'all') return Object.keys(configs)
-  if (region === 'europe')
-    return Object.keys(configs).filter((id) =>
-      ['europe', 'europe-extra', 'europe-adjacent'].includes(configs[id].group),
-    )
-  if (region === 'europe-core')
-    return Object.keys(configs).filter((id) => configs[id].group === 'europe')
-  if (['europe-extra', 'europe-adjacent', 'americas'].includes(region))
+  if (['europe', 'americas'].includes(region))
     return Object.keys(configs).filter((id) => configs[id].group === region)
   if (!Object.hasOwn(configs, region))
     throw new Error('Unknown region: ' + region)

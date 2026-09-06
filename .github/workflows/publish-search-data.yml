@@ -51,23 +51,8 @@ jobs:
         run: node bin/fetch-data-artifacts.js
         env:
           GH_TOKEN: ${{ github.token }}
-      - name: Upload OSM versions to configured R2 host
-        if: steps.components.outputs.ready == 'true' && vars.OSM_DATA_HOST == 'r2'
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-          R2_ACCOUNT_ID: ${{ vars.R2_ACCOUNT_ID }}
-          R2_BUCKET: ${{ vars.R2_BUCKET }}
-          R2_PUBLIC_URL: ${{ vars.R2_PUBLIC_URL }}
-        run: |
-          node bin/publish-osm-r2.js --source tmp/components/osm --account "$R2_ACCOUNT_ID" --bucket "$R2_BUCKET" --public-url "$R2_PUBLIC_URL" --apply
       - if: steps.components.outputs.ready == 'true'
-        env:
-          OSM_DATA_HOST: ${{ vars.OSM_DATA_HOST }}
-          R2_PUBLIC_URL: ${{ vars.R2_PUBLIC_URL }}
-        run: |
-          if [ "$OSM_DATA_HOST" = r2 ]; then export OSM_DATA_URL="${R2_PUBLIC_URL%/}/osm"; fi
-          node bin/assemble-pages.js tmp/components/japan tmp/components/osm tmp/pages
+        run: node bin/assemble-pages.js tmp/components/japan tmp/components/osm tmp/pages
       - if: steps.components.outputs.ready == 'true'
         uses: actions/upload-pages-artifact@v3
         with:

@@ -15,7 +15,7 @@ on:
         type: boolean
         default: false
       region:
-        description: all, europe, europe-core, europe-extra, americas, or a region ID (groups/regions are previews)
+        description: all, europe, americas, or a region ID (groups/regions are previews)
         type: string
         default: all
       source_run:

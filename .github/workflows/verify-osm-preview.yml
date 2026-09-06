@@ -6,6 +6,10 @@ on:
         description: Run containing all configured osm-data-preview-{region} artifacts
         type: string
         required: true
+      japan_source_run:
+        description: Optional run containing gsi-pages-data for a complete Pages capacity check
+        type: string
+        default: ''
 permissions:
   contents: read
   actions: read
@@ -22,13 +26,22 @@ jobs:
           node-version: 22.x
           cache: npm
       - run: npm ci && npm run build
-      - name: Download all regional artifacts across API pages
+      - name: Download configured regional artifacts across API pages
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_RUN: ${{ inputs.source_run }}
         run: |
           [[ "$SOURCE_RUN" =~ ^[0-9]+$ ]]
-          gh run download "$SOURCE_RUN" --repo "$GITHUB_REPOSITORY" --pattern 'osm-data-preview-*' --dir tmp/osm-previews
+          node <<'JS'
+          const { execFileSync } = require('node:child_process')
+          const { selectRegions } = require('./bin/build-osm-regions')
+          for (const region of selectRegions()) {
+            const name = 'osm-data-preview-' + region
+            execFileSync('gh', ['run', 'download', process.env.SOURCE_RUN,
+              '--repo', process.env.GITHUB_REPOSITORY, '--name', name,
+              '--dir', 'tmp/osm-previews/' + name], { stdio: 'inherit' })
+          }
+          JS
       - name: Verify full files and automatic region selection with current code
         run: |
           node <<'JS'
@@ -51,6 +64,23 @@ jobs:
           }
           main().catch(e => { console.error(e); process.exitCode = 1 })
           JS
+      - name: Download domestic data for Pages assembly
+        if: inputs.japan_source_run != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          JAPAN_SOURCE_RUN: ${{ inputs.japan_source_run }}
+        run: |
+          [[ "$JAPAN_SOURCE_RUN" =~ ^[0-9]+$ ]]
+          gh run download "$JAPAN_SOURCE_RUN" --repo "$GITHUB_REPOSITORY" --name gsi-pages-data --dir tmp/japan
+      - name: Verify complete Pages payload against both capacity budgets
+        if: inputs.japan_source_run != ''
+        run: node bin/assemble-pages.js tmp/japan tmp/osm-data tmp/pages
+      - uses: actions/upload-artifact@v4
+        if: inputs.japan_source_run != ''
+        with:
+          name: pages-capacity-report
+          path: tmp/pages/datasets.json
+          retention-days: 7
       - uses: actions/upload-artifact@v4
         with:
           name: osm-data-preview

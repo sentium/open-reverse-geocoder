@@ -463,26 +463,3 @@ test('small searches in narrow extracts do not require a whole POI tile, but sti
     reverseGeocode(position, { ...options, nearby }),
   ).rejects.toThrow('coverage')
 })
-
-test('catalog entries can point to another static origin without fetching country files from Pages', async () => {
-  const catalog = data.get(root + '/catalog.json') as {
-    regions: { dataUrl?: string }[]
-  }
-  const origin = 'https://tiles.invalid/osm/us'
-  catalog.regions[0].dataUrl = origin
-  for (const [url, value] of [...data.entries()]) {
-    if (url.startsWith(root + '/us/')) {
-      data.set(url.replace(root + '/us', origin), value)
-      data.delete(url)
-    }
-  }
-  expect((await reverseGeocode(position, options)).nearby?.selected?.name).toBe(
-    'Union Station',
-  )
-  expect(get.mock.calls.some(([url]) => url.startsWith(origin))).toBe(true)
-  expect(get.mock.calls.some(([url]) => url.startsWith(root + '/us/'))).toBe(
-    false,
-  )
-  catalog.regions[0].dataUrl = 'https://tiles.invalid/osm?secret=value'
-  expect(() => validateCatalog(catalog)).toThrow('Invalid OSM region')
-})

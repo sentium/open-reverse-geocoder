@@ -24,11 +24,16 @@ test('region selection rejects unknown IDs and mismatched source metadata', () =
     'philippines',
     'thailand',
   ])
-  assert.equal(selectRegions().length, 65)
-  assert.equal(selectRegions('europe').length, 55)
-  assert.equal(selectRegions('europe-core').length, 45)
-  assert.equal(selectRegions('europe-extra').length, 7)
-  assert.equal(selectRegions('europe-adjacent').length, 3)
+  assert.equal(selectRegions().length, 13)
+  assert.deepEqual(selectRegions('europe'), ['germany', 'italy', 'romania'])
+  for (const id of [
+    'france',
+    'norway',
+    'europe-core',
+    'europe-extra',
+    'europe-adjacent',
+  ])
+    assert.throws(() => selectRegions(id), /Unknown region/)
   assert.deepEqual(selectRegions('americas'), ['brazil', 'mexico'])
   assert.deepEqual(selectRegions('taiwan'), ['taiwan'])
   assert.throws(() => selectRegions('../us'), /Unknown region/)
@@ -48,20 +53,6 @@ test('region selection rejects unknown IDs and mismatched source metadata', () =
   feature.properties['iso3166-1:alpha2'] = ['TW']
   feature.properties.urls.pbf = 'https://example.com/taiwan.osm.pbf'
   assert.throws(() => selectExtract(index, 'taiwan'), /Unexpected extract URL/)
-  const unmapped = {
-    properties: {
-      id: 'kosovo',
-      urls: {
-        pbf: 'https://download.geofabrik.de/europe/kosovo-latest.osm.pbf',
-      },
-    },
-  }
-  assert.equal(selectExtract({ features: [unmapped] }, 'kosovo'), unmapped)
-  unmapped.properties['iso3166-1:alpha2'] = ['RS']
-  assert.throws(
-    () => selectExtract({ features: [unmapped] }, 'kosovo'),
-    /unexpected country/,
-  )
 })
 
 test('multi-run previews require an exact non-overlapping mapping of selected regions', () => {

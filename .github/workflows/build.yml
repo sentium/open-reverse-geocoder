@@ -11,6 +11,10 @@ on:
         description: Optionally verify all generated OSM regions from a previous run (never publishes)
         type: string
         default: ''
+      preview_japan_source_run:
+        description: Optionally assemble the preview with gsi-pages-data from this run (never publishes)
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -55,6 +59,7 @@ jobs:
     uses: ./.github/workflows/verify-osm-preview.yml
     with:
       source_run: ${{ inputs.preview_source_run }}
+      japan_source_run: ${{ inputs.preview_japan_source_run }}
 
   publish:
     name: Publish npm package

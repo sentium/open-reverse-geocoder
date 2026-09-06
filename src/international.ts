@@ -59,8 +59,6 @@ export interface OsmRegion {
   countryCodes: string[]
   /** Bounding boxes only select candidate extracts; exact coverage is checked next. */
   bounds: [number, number, number, number][]
-  /** Optional static host for this region; the catalog can remain on Pages. */
-  dataUrl?: string
 }
 export interface OsmCatalog {
   schemaVersion: 1
@@ -82,13 +80,6 @@ export class UnsupportedRegionError extends SearchDataError {
   }
 }
 
-function validDataUrl(value: unknown): boolean {
-  return (
-    typeof value === 'string' &&
-    /^https?:\/\/[^/@?#\s]+(?:\/[^?#\s]*)?$/.test(value)
-  )
-}
-
 export function validateCatalog(value: unknown): OsmCatalog {
   const v = value as OsmCatalog
   const id = /^[a-zA-Z0-9_-]{1,80}$/
@@ -107,7 +98,6 @@ export function validateCatalog(value: unknown): OsmCatalog {
       !Array.isArray(r.countryCodes) ||
       !r.countryCodes.length ||
       !r.countryCodes.every((c) => /^[A-Z]{2}$/.test(c)) ||
-      (r.dataUrl !== undefined && !validDataUrl(r.dataUrl)) ||
       !Array.isArray(r.bounds) ||
       !r.bounds.length ||
       !r.bounds.every(
@@ -242,10 +232,7 @@ export async function reverseGeocode(
   let coverageError: SearchCoverageError | undefined
   let unresolved: GlobalReverseGeocodingResult | undefined
   for (const region of candidates) {
-    const dataUrl = (region.dataUrl ?? `${root}/${region.id}`).replace(
-      /\/+$/,
-      '',
-    )
+    const dataUrl = `${root}/${region.id}`
     const base = `${dataUrl}/${region.version}`
     const manifest = await loadJson(`${base}/manifest.json`, validateManifest)
     if (

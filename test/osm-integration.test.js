@@ -173,19 +173,6 @@ async function integration(t, adminZoom, compress) {
     await fs.readFile(path.join(copy, 'LICENSE.txt'), 'utf8'),
     /Open Database License/,
   )
-  // A small Pages catalog can refer to a separate static OSM host. The
-  // downloaded tiles and the public search API retain the same structure.
-  const thinSite = path.join(site, 'external')
-  await assemble(japanSite, output, thinSite, root + '/osm')
-  assert.deepEqual(await fs.readdir(path.join(thinSite, 'osm')), [
-    'catalog.json',
-  ])
-  const external = await reverseGeocode([-77.0065, 38.8977], {
-    ...options,
-    osmDataUrl: root + '/external/osm',
-  })
-  assert.equal(external.countryCode, 'US')
-  assert.match(external.nearby.selected.name, /Union Station/)
   // A corrupt/missing foreign file must prevent publication, never erase OSM.
   const manifest = JSON.parse(
     await fs.readFile(path.join(output, 'test-us/fixture/manifest.json')),
@@ -217,4 +204,4 @@ for (const [adminZoom, compress] of [
   [10, true],
 ])
   test(`real Washington OSM PBF -> z${adminZoom} admin tiles (gzip=${compress}) -> HTTP API and full download; publication preserves Japan`, (t) =>
-    integration(t, adminZoom))
+    integration(t, adminZoom, compress))
