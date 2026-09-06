@@ -164,6 +164,10 @@ async function build({
       version,
       '--admin-zoom',
       String(configs[id].adminZoom || 8),
+      ...(configs[id].tileCompression === 'gzip' ? ['--compress'] : []),
+      ...(configs[id].countryName
+        ? ['--country-name', configs[id].countryName]
+        : []),
       '--source-revision',
       (await fs.readFile(path.join(input, 'SHA256SUMS'), 'utf8')) + exportHash,
       '--output',

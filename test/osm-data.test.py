@@ -19,6 +19,20 @@ def polygon(w, s, e, n):
 
 
 class OsmDataTest(unittest.TestCase):
+    def test_tile_edge_contacts_do_not_create_empty_administrative_polygons(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            b = builder.Builder(Path(tmp), builder.normalize_geojson(polygon(0, 0, 1, 1)), {'IN': 'India'})
+            tags = {'@id': 1, '@type': 'relation', 'boundary': 'administrative', 'admin_level': '2', 'ISO3166-1:alpha2': 'IN', 'name': 'Synthetic country'}
+            b.add({'type': 'Feature', 'geometry': polygon(1, 0, 2, 1), 'properties': tags})
+            self.assertEqual(b.db.execute('SELECT COUNT(*) FROM records').fetchone()[0], 0)
+            self.assertEqual(b.stats['country:IN'], 0)
+            b.add({'type': 'Feature', 'geometry': polygon(0, 0, 1, 1), 'properties': tags})
+            areas = [shape(json.loads(row[0])['geometry']) for row in b.db.execute("SELECT value FROM records WHERE kind='admin'")]
+            self.assertTrue(areas)
+            self.assertTrue(all(not area.is_empty for area in areas))
+            self.assertAlmostEqual(builder.unary_union(areas).area, 1)
+            b.db.close()
+
     def test_missing_alaska_boundary_restored_using_real_osm_geometry(self):
         with gzip.open(Path(__file__).parent / 'fixtures/osm-alaska-boundary.json.gz') as f:
             alaska = json.load(f)

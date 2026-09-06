@@ -85,7 +85,9 @@
         "landmark",
         "Monumen Nasional|Monas"
       ]
-    ]
+    ],
+    "tileCompression": "gzip",
+    "countryName": "Indonesia"
   },
   "india": {
     "countryCode": "IN",
@@ -103,7 +105,8 @@
         "New Delhi|नई दिल्ली"
       ],
       ["India Gate", [77.2295, 28.6129], "landmark", "India Gate|इंडिया गेट"]
-    ]
+    ],
+    "tileCompression": "gzip"
   },
   "vietnam": {
     "countryCode": "VN",
@@ -121,7 +124,8 @@
         "landmark",
         "Độc Lập|Independence|Reunification"
       ]
-    ]
+    ],
+    "tileCompression": "gzip"
   },
   "philippines": {
     "countryCode": "PH",
@@ -133,8 +137,9 @@
     ],
     "nearbySamples": [
       ["Doroteo Jose station", [120.9826, 14.6054], "station", "Doroteo Jose"],
-      ["Rizal Monument", [120.976, 14.5818], "landmark", "Rizal"]
-    ]
+      ["Rizal Monument", [120.9770258, 14.5817929], "landmark", "Rizal"]
+    ],
+    "tileCompression": "gzip"
   },
   "thailand": {
     "countryCode": "TH",
@@ -152,6 +157,7 @@
         "หัวลำโพง|Hua Lamphong|กรุงเทพ"
       ],
       ["Wat Arun", [100.4887, 13.7437], "landmark", "อรุณ|Arun"]
-    ]
+    ],
+    "tileCompression": "gzip"
   }
 }

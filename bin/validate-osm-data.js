@@ -3,6 +3,7 @@ const fs = require('node:fs/promises')
 const path = require('node:path')
 const {
   validateManifest,
+  decodeGzip,
   validateIndex,
   validatePoiTile,
   validateRoadTile,
@@ -21,8 +22,11 @@ async function validateOsm(root, candidateCatalog) {
   let bytes = 0
   const reports = []
   async function read(filename, validator) {
-    const raw = await fs.readFile(filename, 'utf8')
-    bytes += Buffer.byteLength(raw)
+    const buffer = await fs.readFile(filename)
+    bytes += buffer.length
+    const raw = filename.endsWith('.gz')
+      ? decodeGzip(buffer)
+      : buffer.toString('utf8')
     if (raw.length * 2 > 16 * 1024 * 1024)
       throw new Error('Client size limit exceeded: ' + filename)
     return validator(JSON.parse(raw))
@@ -62,7 +66,12 @@ async function validateOsm(root, candidateCatalog) {
           )
             throw new Error('Index ownership mismatch')
           const tile = await read(
-            path.join(base, kind, String(z), key + '.json'),
+            path.join(
+              base,
+              kind,
+              String(z),
+              key + (m.tileCompression === 'gzip' ? '.json.gz' : '.json'),
+            ),
             validator,
           )
           const [w, s, e, n] = tileBounds([z, x, y])

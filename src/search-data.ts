@@ -8,6 +8,7 @@ import {
 } from './nearby-types'
 import { validatePosition, Tile, tileKey } from './spatial'
 import { validateGeometry } from './polygon'
+import { decodeJsonBytes } from './gzip'
 
 // Both decoded data and in-flight requests are shared by all callers.
 const MAX_ENTRIES = 128
@@ -89,15 +90,16 @@ export async function loadJson<T>(
     await acquire()
     try {
       const response = await axios.get(url, {
-        responseType: 'text',
+        responseType: url.endsWith('.json.gz') ? 'arraybuffer' : 'text',
         timeout: 15000,
         transformResponse: [(data: string) => data],
         maxContentLength: MAX_BYTES,
       })
-      const raw =
-        typeof response.data === 'string'
-          ? response.data
-          : JSON.stringify(response.data)
+      const raw = url.endsWith('.json.gz')
+        ? decodeJsonBytes(new Uint8Array(response.data))
+        : typeof response.data === 'string'
+        ? response.data
+        : JSON.stringify(response.data)
       if (raw.length * 2 > MAX_BYTES)
         throw new SearchDataError(`Search data is too large: ${url}`)
       const value = validate(JSON.parse(raw))
@@ -163,6 +165,7 @@ export function validateManifest(value: unknown): SearchManifest {
   if (v.schemaVersion === 2) {
     if (
       !validKeys(v.indexTiles, 6) ||
+      (v.tileCompression !== undefined && v.tileCompression !== 'gzip') ||
       (v.adminZoom !== undefined &&
         (!Number.isInteger(v.adminZoom) ||
           (v.adminZoom as number) < 8 ||
@@ -175,6 +178,16 @@ export function validateManifest(value: unknown): SearchManifest {
     validateGeometry(v.coverageGeometry)
   }
   return v as unknown as SearchManifest
+}
+
+export function tileUrl(
+  base: string,
+  key: string,
+  manifest: SearchManifest,
+): string {
+  return `${base}/${key}.json${
+    manifest.tileCompression === 'gzip' ? '.gz' : ''
+  }`
 }
 
 export function validateIndex(value: unknown, adminZoom = 8): SearchIndex {

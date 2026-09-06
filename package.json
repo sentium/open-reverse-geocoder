@@ -63,6 +63,7 @@
     "axios": "^0.21.1",
     "axios-cache-adapter": "^2.7.3",
     "d3-geo": "^2.0.1",
+    "fflate": "^0.8.3",
     "global-mercator": "^3.1.0",
     "pbf": "^3.2.1"
   },

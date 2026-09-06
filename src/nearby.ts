@@ -19,6 +19,7 @@ import {
 } from './spatial'
 import {
   loadJson,
+  tileUrl,
   SearchCoverageError,
   validateManifest,
   validatePoiTile,
@@ -156,7 +157,10 @@ export async function searchNearbyWithManifest(
         tiles
           .filter((t) => roadKeys.has(tileKey(t)))
           .map((t) =>
-            loadJson(`${base}/road/14/${tileKey(t)}.json`, validateRoadTile),
+            loadJson(
+              tileUrl(base, `road/14/${tileKey(t)}`, manifest),
+              validateRoadTile,
+            ),
           ),
       )
     ).flatMap((t) => t.roads)
@@ -192,7 +196,10 @@ export async function searchNearbyWithManifest(
         tiles
           .filter((t) => poiKeys.has(tileKey(t)))
           .map((t) =>
-            loadJson(`${base}/poi/12/${tileKey(t)}.json`, validatePoiTile),
+            loadJson(
+              tileUrl(base, `poi/12/${tileKey(t)}`, manifest),
+              validatePoiTile,
+            ),
           ),
       )
       for (const tile of pointTiles)

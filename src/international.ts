@@ -7,6 +7,7 @@ import { NearbyOptions, NearbyResult, MultiPolygon } from './nearby-types'
 import { LngLat, tileAt, tileKey, validatePosition } from './spatial'
 import {
   loadJson,
+  tileUrl,
   loadTileIndex,
   SearchDataError,
   SearchCoverageError,
@@ -246,7 +247,7 @@ export async function reverseGeocode(
     const index = await loadTileIndex(manifest, base, [tile])
     const admin = index.adminTiles.includes(key)
       ? await loadJson(
-          `${base}/admin/${adminZoom}/${key}.json`,
+          tileUrl(base, `admin/${adminZoom}/${key}`, manifest),
           validateAdminTile,
         )
       : { areas: [] }

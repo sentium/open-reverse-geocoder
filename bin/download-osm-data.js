@@ -4,6 +4,7 @@ const fs = require('node:fs/promises')
 const path = require('node:path')
 const {
   validateManifest,
+  decodeGzip,
   validateIndex,
   validatePoiTile,
   validateRoadTile,
@@ -28,7 +29,12 @@ async function download(base, output) {
       chunks.push(chunk)
     }
     const buffer = Buffer.concat(chunks)
-    if (validator) validator(JSON.parse(buffer))
+    if (validator)
+      validator(
+        JSON.parse(
+          key.endsWith('.gz') ? decodeGzip(buffer) : buffer.toString('utf8'),
+        ),
+      )
     const dest = path.join(output, key)
     await fs.mkdir(path.dirname(dest), { recursive: true })
     await fs.writeFile(dest, buffer)
@@ -50,7 +56,12 @@ async function download(base, output) {
       ['admin', manifest.adminZoom ?? 8, index.adminTiles, validateAdminTile],
     ])
       for (const tile of keys)
-        files.push([`${kind}/${z}/${tile}.json`, validator])
+        files.push([
+          `${kind}/${z}/${tile}.json${
+            manifest.tileCompression === 'gzip' ? '.gz' : ''
+          }`,
+          validator,
+        ])
   }
   let cursor = 0
   await Promise.all(
