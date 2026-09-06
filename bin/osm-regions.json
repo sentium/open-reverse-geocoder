@@ -381,7 +381,10 @@
     "adminZoom": 10,
     "tileCompression": "gzip",
     "group": "europe",
-    "administrativeSamples": [["Helsinki", [24.9384, 60.1699], "FI-18"]],
+    "administrativeSamples": [
+      ["Helsinki", [24.9384, 60.1699], "FI-18"],
+      ["Mariehamn (Aland)", [19.9348, 60.0973], "FI-01"]
+    ],
     "nearbySamples": [
       [
         "Helsinki Cathedral",
@@ -691,7 +694,10 @@
     "adminZoom": 10,
     "tileCompression": "gzip",
     "group": "europe",
-    "administrativeSamples": [["Lisbon", [-9.1393, 38.7223], "PT-11"]],
+    "administrativeSamples": [
+      ["Lisbon", [-9.1393, 38.7223], "PT-11"],
+      ["Funchal (Madeira)", [-16.9083, 32.6486], "PT-30"]
+    ],
     "nearbySamples": [
       ["Belem Tower", [-9.2159, 38.6916], "landmark", "Torre de Belém"]
     ]
@@ -728,7 +734,12 @@
     "group": "europe",
     "administrativeSamples": [["Bratislava", [17.1077, 48.1486], "SK-BL"]],
     "nearbySamples": [
-      ["Bratislava Castle", [17.099, 48.1421], "landmark", "Bratislavský hrad"]
+      [
+        "Bratislava Castle",
+        [17.100469485418994, 48.14258665],
+        "landmark",
+        "Bratislavský hrad"
+      ]
     ]
   },
   "slovenia": {
@@ -972,10 +983,14 @@
     "adminZoom": 10,
     "tileCompression": "gzip",
     "group": "europe-adjacent",
-    "administrativeSamples": [["Baku", [49.8671, 40.4093], "AZ-BA"]],
+    "administrativeSamples": [
+      ["Baku", [49.8671, 40.4093], "AZ"],
+      ["Nakhchivan", [45.4122, 39.2089], "AZ-NX"]
+    ],
     "nearbySamples": [
-      ["Maiden Tower", [49.837, 40.3662], "landmark", "[Qq]ız qalası"]
-    ]
+      ["Maiden Tower", [49.837, 40.3662], "landmark", "^Qız Qalası$"]
+    ],
+    "boundaryConfig": "azerbaijan-boundaries.json"
   },
   "kazakhstan": {
     "countryCode": "KZ",

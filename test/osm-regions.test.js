@@ -7,6 +7,7 @@ const { execFileSync } = require('node:child_process')
 const {
   selectRegions,
   selectExtract,
+  selectSources,
   build,
 } = require('../bin/build-osm-regions')
 const { prepare } = require('../bin/prepare-osm-catalog')
@@ -60,6 +61,37 @@ test('region selection rejects unknown IDs and mismatched source metadata', () =
   assert.throws(
     () => selectExtract({ features: [unmapped] }, 'kosovo'),
     /unexpected country/,
+  )
+})
+
+test('multi-run previews require an exact non-overlapping mapping of selected regions', () => {
+  assert.deepEqual(selectSources(['brazil', 'mexico']), [
+    { region: 'brazil', source_run: '' },
+    { region: 'mexico', source_run: '' },
+  ])
+  assert.deepEqual(selectSources(['brazil', 'mexico'], '{"americas":"123"}'), [
+    { region: 'brazil', source_run: '123' },
+    { region: 'mexico', source_run: '123' },
+  ])
+  assert.deepEqual(selectSources(['brazil'], '123'), [
+    { region: 'brazil', source_run: '123' },
+  ])
+  assert.throws(
+    () => selectSources(['brazil', 'mexico'], '{"brazil":"123"}'),
+    /every selected/,
+  )
+  assert.throws(
+    () =>
+      selectSources(['brazil', 'mexico'], '{"americas":"123","brazil":"456"}'),
+    /duplicate/,
+  )
+  assert.throws(
+    () => selectSources(['brazil'], '{"mexico":"123"}'),
+    /unselected/,
+  )
+  assert.throws(
+    () => selectSources(['brazil'], '{"brazil":"../123"}'),
+    /Invalid source/,
   )
 })
 

@@ -19,7 +19,7 @@ on:
         type: string
         default: all
       source_run:
-        description: Reuse matching region input artifacts from a prior run (preview only)
+        description: Source run ID, or JSON mapping region/group IDs to run IDs (preview only)
         type: string
         default: ''
   schedule:
@@ -38,6 +38,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       regions: ${{ steps.plan.outputs.regions }}
+      matrix: ${{ steps.plan.outputs.matrix }}
       single: ${{ steps.plan.outputs.single }}
     steps:
       - uses: actions/checkout@v4
@@ -54,12 +55,14 @@ jobs:
         run: |
           node <<'JS'
           const fs = require('node:fs')
-          const { selectRegions } = require('./bin/build-osm-regions')
+          const { selectRegions, selectSources } = require('./bin/build-osm-regions')
           const { REGION, SOURCE_RUN, PUBLISH } = process.env
           const regions = selectRegions(REGION)
+          const matrix = selectSources(regions, SOURCE_RUN)
           if (PUBLISH === 'true' && (REGION !== 'all' || SOURCE_RUN))
             throw new Error('Publication requires fresh snapshots of all configured regions')
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `regions=${JSON.stringify(regions)}\nsingle=${regions.length === 1}\n`)
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `matrix=${JSON.stringify(matrix)}\n`)
           JS
   generate:
     needs: plan
@@ -69,7 +72,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        region: ${{ fromJSON(needs.plan.outputs.regions) }}
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -83,10 +86,10 @@ jobs:
       - run: pip install -r bin/osm-requirements.txt
       - run: sudo apt-get update && sudo apt-get install -y osmium-tool
       - id: source
-        if: inputs.source_run
+        if: matrix.source_run != ''
         env:
           GH_TOKEN: ${{ github.token }}
-          SOURCE_RUN: ${{ inputs.source_run }}
+          SOURCE_RUN: ${{ matrix.source_run }}
           REGION: ${{ matrix.region }}
         run: |
           gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN/artifacts?per_page=100" > tmp-source-artifacts.json
@@ -98,16 +101,16 @@ jobs:
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `name=${name}\n`)
           JS
       - uses: actions/download-artifact@v4
-        if: inputs.source_run
+        if: matrix.source_run != ''
         with:
           name: ${{ steps.source.outputs.name }}
-          run-id: ${{ inputs.source_run }}
+          run-id: ${{ matrix.source_run }}
           github-token: ${{ github.token }}
           path: tmp/osm-source
       - name: Generate and verify region
         env:
           REGION: ${{ matrix.region }}
-          SOURCE_RUN: ${{ inputs.source_run }}
+          SOURCE_RUN: ${{ matrix.source_run }}
         run: |
           args=()
           if [ -n "$SOURCE_RUN" ]; then args+=(--reuse-input); fi

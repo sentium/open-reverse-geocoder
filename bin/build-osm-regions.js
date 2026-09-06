@@ -44,6 +44,30 @@ function selectExtract(index, id) {
   return feature
 }
 
+function selectSources(regions, value = '') {
+  if (!value) return regions.map((region) => ({ region, source_run: '' }))
+  if (/^[0-9]+$/.test(value))
+    return regions.map((region) => ({ region, source_run: value }))
+  const mapping = JSON.parse(value)
+  if (!mapping || Array.isArray(mapping) || typeof mapping !== 'object')
+    throw new Error('Expected a source run ID or region/group-to-run mapping')
+  const sources = new Map()
+  for (const [selector, run] of Object.entries(mapping)) {
+    if (typeof run !== 'string' || !/^[0-9]+$/.test(run))
+      throw new Error('Invalid source run ID')
+    for (const region of selectRegions(selector)) {
+      if (!regions.includes(region) || sources.has(region))
+        throw new Error(
+          'Source mapping contains an unselected or duplicate region',
+        )
+      sources.set(region, run)
+    }
+  }
+  if (sources.size !== regions.length)
+    throw new Error('Source mapping must cover every selected region')
+  return regions.map((region) => ({ region, source_run: sources.get(region) }))
+}
+
 function run(command, args, options = {}) {
   execFileSync(command, args, { stdio: 'inherit', ...options })
 }
@@ -227,7 +251,7 @@ async function build({
   return report
 }
 
-module.exports = { build, selectRegions, selectExtract }
+module.exports = { build, selectRegions, selectExtract, selectSources }
 if (require.main === module) {
   const { values } = parseArgs({
     options: {
