@@ -162,6 +162,8 @@ async function build({
       path.join(input, 'region.json'),
       '--version',
       version,
+      '--admin-zoom',
+      String(configs[id].adminZoom || 8),
       '--source-revision',
       (await fs.readFile(path.join(input, 'SHA256SUMS'), 'utf8')) + exportHash,
       '--output',

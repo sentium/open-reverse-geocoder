@@ -43,12 +43,12 @@ async function validateOsm(root, candidateCatalog) {
     for (const shard of m.indexTiles) {
       const index = await read(
         path.join(base, 'index/6', shard + '.json'),
-        validateIndex,
+        (value) => validateIndex(value, m.adminZoom ?? 8),
       )
       for (const [kind, z, keys, validator] of [
         ['poi', 12, index.poiTiles, validatePoiTile],
         ['road', 14, index.roadTiles, validateRoadTile],
-        ['admin', 8, index.adminTiles, validateAdminTile],
+        ['admin', m.adminZoom ?? 8, index.adminTiles, validateAdminTile],
       ]) {
         if (new Set(keys).size !== keys.length)
           throw new Error('Duplicate tile index')

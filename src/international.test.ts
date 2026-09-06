@@ -4,7 +4,7 @@ import {
   UnsupportedRegionError,
   validateCatalog,
 } from './international'
-import { clearNearbyCache } from './search-data'
+import { clearNearbyCache, validateManifest } from './search-data'
 import { MultiPolygon } from './nearby-types'
 import { polygonContains, polygonCoversTile } from './polygon'
 import { tileAt, tileKey, lineDistanceM } from './spatial'
@@ -120,6 +120,42 @@ const options = {
   osmDataUrl: root,
   nearby: { rules: [{ kind: 'station' as const, radiusM: 5000, priority: 1 }] },
 }
+test('reads finer administrative tiles using the manifest zoom', async () => {
+  const manifest = data.get(root + '/us/v1/manifest.json') as Record<
+    string,
+    unknown
+  >
+  data.set(root + '/us/v1/manifest.json', { ...manifest, adminZoom: 10 })
+  const index = data.get(root + `/us/v1/index/6/${key(6)}.json`) as Record<
+    string,
+    unknown
+  >
+  data.set(root + `/us/v1/index/6/${key(6)}.json`, {
+    ...index,
+    adminTiles: [key(10)],
+  })
+  data.set(
+    root + `/us/v1/admin/10/${key(10)}.json`,
+    data.get(root + `/us/v1/admin/8/${key(8)}.json`),
+  )
+  data.delete(root + `/us/v1/admin/8/${key(8)}.json`)
+  const result = await reverseGeocode(position, options)
+  expect(result.countryCode).toBe('US')
+  expect(result.nearby?.selected?.name).toBe('Union Station')
+  expect(get.mock.calls.some(([url]) => url.includes('/admin/8/'))).toBe(false)
+})
+test.each([null, 7, 13, 8.5, '10'])(
+  'rejects invalid administrative zoom %p',
+  (adminZoom) => {
+    const manifest = data.get(root + '/us/v1/manifest.json') as Record<
+      string,
+      unknown
+    >
+    expect(() => validateManifest({ ...manifest, adminZoom })).toThrow(
+      'Invalid sharded manifest',
+    )
+  },
+)
 test('global API returns containing administrative hierarchy and nearby station, with a pinned version', async () => {
   const result = await reverseGeocode(position, options)
   expect(result.countryCode).toBe('US')

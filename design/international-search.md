@@ -50,7 +50,10 @@ URL・取得日時・SHA-256を `boundary-sources.json` に、補完後の入力
 異なり得る。完全なポリゴンを取得できなければ公開を停止する。
 
 Python/Shapely の生成ツールは1地物ずつ処理し、SQLite にタイル単位で一時保存する。
-道路は z14、行政界は z8 の境界で切り、施設の代表点は z12 に配置する。
+道路は z14、行政界は manifest の `adminZoom`（省略時z8、8〜12）で切り、施設の代表点は z12 に配置する。
+台湾・韓国の実データではz8の行政界が16MiBの文字列メモリ上限を超えたため、z10を使用する。
+境界の簡略化や上限緩和は行わず、読込・索引の所属検証・全量ダウンロードも同じズームに従う。
+既存の米国manifestは `adminZoom` なしのまま読める。新しいズームの地域には対応するライブラリが必要。
 穴・飛び地を保持し、日付変更線をまたぐ形状は±180°で分割する。
 施設の位置は面内の代表点で、入口・徒歩経路距離ではない。
 ID は `osm:{node|way|relation}:{id}` で、同名別施設を統合しない。
@@ -71,7 +74,7 @@ osm/{region}/{version}/LICENSE.txt
 osm/{region}/{version}/index/6/{x}/{y}.json
 osm/{region}/{version}/poi/12/{x}/{y}.json
 osm/{region}/{version}/road/14/{x}/{y}.json
-osm/{region}/{version}/admin/8/{x}/{y}.json
+osm/{region}/{version}/admin/{adminZoom}/{x}/{y}.json
 ```
 
 v2 manifest は正確な抽出範囲と z6 索引一覧を持つ。全米の細粒度タイル一覧を初回に

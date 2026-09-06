@@ -40,11 +40,14 @@ async function download(base, output) {
   await get('region.json')
   const files = []
   for (const key of manifest.indexTiles) {
-    const index = validateIndex(JSON.parse(await get(`index/6/${key}.json`)))
+    const index = validateIndex(
+      JSON.parse(await get(`index/6/${key}.json`)),
+      manifest.adminZoom ?? 8,
+    )
     for (const [kind, z, keys, validator] of [
       ['poi', 12, index.poiTiles, validatePoiTile],
       ['road', 14, index.roadTiles, validateRoadTile],
-      ['admin', 8, index.adminTiles, validateAdminTile],
+      ['admin', manifest.adminZoom ?? 8, index.adminTiles, validateAdminTile],
     ])
       for (const tile of keys)
         files.push([`${kind}/${z}/${tile}.json`, validator])

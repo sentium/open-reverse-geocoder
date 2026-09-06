@@ -281,6 +281,8 @@ node bin/download-osm-data.js https://sentium.github.io/open-reverse-geocoder/os
 `bin/osm-regions.json` に Geofabrik の地域ID・国コード・行政地名と近傍施設の検証地点を設定します。
 米国の境界補完は米国にだけ適用します。追加地域で必要なら `boundaryConfig` も指定します。
 取得元の抽出範囲と国コードを照合し、国別の生成物をまとめてカタログを検証します。
+詳細な行政界が1タイルの上限を超える台湾・韓国は `adminZoom=10` で分割します。
+境界形状を簡略化せず、米国は従来のz8を維持します。追加国の読込にはこの変更を含むライブラリが必要です。
 取得元・PBFヘッダ・入力ハッシュ・境界補完履歴は `{region}/{version}/provenance/`、
 全地域の検索結果はルートの `verification.json` に保存します。
 

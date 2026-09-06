@@ -22,6 +22,7 @@
   },
   "taiwan": {
     "countryCode": "TW",
+    "adminZoom": 10,
     "administrativeSamples": [
       ["Taipei", [121.517, 25.0478], "TW-TPE"],
       ["Kaohsiung", [120.3014, 22.6395], "TW-KHH"],
@@ -39,6 +40,7 @@
   },
   "south-korea": {
     "countryCode": "KR",
+    "adminZoom": 10,
     "administrativeSamples": [
       ["Seoul", [126.9707, 37.5547], "KR-11"],
       ["Busan", [129.0403, 35.1152], "KR-26"],

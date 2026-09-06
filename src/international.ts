@@ -240,11 +240,15 @@ export async function reverseGeocode(
     )
       throw new SearchDataError('Catalog and dataset version do not match')
     if (!polygonContains(manifest.coverageGeometry, position)) continue
-    const tile = tileAt(position, 8),
+    const adminZoom = manifest.adminZoom ?? 8
+    const tile = tileAt(position, adminZoom),
       key = tileKey(tile)
     const index = await loadTileIndex(manifest, base, [tile])
     const admin = index.adminTiles.includes(key)
-      ? await loadJson(`${base}/admin/8/${key}.json`, validateAdminTile)
+      ? await loadJson(
+          `${base}/admin/${adminZoom}/${key}.json`,
+          validateAdminTile,
+        )
       : { areas: [] }
     const areas = admin.areas
       .filter((a) => polygonContains(a.geometry, position))

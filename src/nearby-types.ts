@@ -74,6 +74,8 @@ export interface SearchManifest {
   roadTiles: string[]
   /** v2 splits tile indexes into z6 shards. */
   indexTiles?: string[]
+  /** Administrative tile zoom in v2 (8–12); omitted means legacy z8. */
+  adminZoom?: number
   coverageGeometry?: MultiPolygon
   license?: string
 }

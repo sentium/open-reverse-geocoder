@@ -163,6 +163,10 @@ export function validateManifest(value: unknown): SearchManifest {
   if (v.schemaVersion === 2) {
     if (
       !validKeys(v.indexTiles, 6) ||
+      (v.adminZoom !== undefined &&
+        (!Number.isInteger(v.adminZoom) ||
+          (v.adminZoom as number) < 8 ||
+          (v.adminZoom as number) > 12)) ||
       v.license !== 'ODbL-1.0' ||
       (v.poiTiles as string[]).length ||
       (v.roadTiles as string[]).length
@@ -173,13 +177,13 @@ export function validateManifest(value: unknown): SearchManifest {
   return v as unknown as SearchManifest
 }
 
-export function validateIndex(value: unknown): SearchIndex {
+export function validateIndex(value: unknown, adminZoom = 8): SearchIndex {
   const v = record(value)
   if (
     v.schemaVersion !== 1 ||
     !validKeys(v.poiTiles, 12) ||
     !validKeys(v.roadTiles, 14) ||
-    !validKeys(v.adminTiles, 8)
+    !validKeys(v.adminTiles, adminZoom)
   )
     throw new Error('Invalid search index')
   return v as unknown as SearchIndex
@@ -208,14 +212,13 @@ export async function loadTileIndex(
     [...shards]
       .filter((k) => available.has(k))
       .map(async (key) => {
-        const index = await loadJson(
-          `${base}/index/6/${key}.json`,
-          validateIndex,
+        const index = await loadJson(`${base}/index/6/${key}.json`, (value) =>
+          validateIndex(value, manifest.adminZoom ?? 8),
         )
         for (const [zoom, keys] of [
           [12, index.poiTiles],
           [14, index.roadTiles],
-          [8, index.adminTiles],
+          [manifest.adminZoom ?? 8, index.adminTiles],
         ] as [number, string[]][])
           if (
             keys.some(

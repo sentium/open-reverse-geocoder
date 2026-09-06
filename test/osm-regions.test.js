@@ -118,6 +118,8 @@ test('multiple countries survive catalog composition and each must pass HTTP sea
       output,
       '--version',
       'fixture',
+      '--admin-zoom',
+      id === 'south-korea' ? '10' : '8',
       '--source-revision',
       'synthetic test',
     ])
