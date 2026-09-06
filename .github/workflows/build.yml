@@ -49,6 +49,9 @@ jobs:
   verify-preview:
     needs: build
     if: github.event_name == 'workflow_dispatch' && inputs.preview_source_run != ''
+    permissions:
+      contents: read
+      actions: read
     uses: ./.github/workflows/verify-osm-preview.yml
     with:
       source_run: ${{ inputs.preview_source_run }}
