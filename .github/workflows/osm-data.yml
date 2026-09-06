@@ -15,6 +15,7 @@ on:
       - bin/osm-requirements.txt
       - bin/complete-osm-boundaries.py
       - bin/us-boundaries.json
+      - bin/taiwan-boundaries.json
       - .github/workflows/osm-data.yml
   workflow_dispatch:
     inputs:

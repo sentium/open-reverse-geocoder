@@ -35,8 +35,15 @@
         "station",
         "臺北|台北|Taipei"
       ],
-      ["Taipei 101", [121.565, 25.0338], "landmark", "101"]
-    ]
+      ["Taipei 101", [121.565, 25.0338], "landmark", "101"],
+      [
+        "Wugu motorway exit",
+        [121.4378874, 25.0687426],
+        "highway",
+        "^五股轉接道$"
+      ]
+    ],
+    "boundaryConfig": "taiwan-boundaries.json"
   },
   "south-korea": {
     "countryCode": "KR",
@@ -48,7 +55,18 @@
     ],
     "nearbySamples": [
       ["Seoul Station", [126.9707, 37.5547], "station", "서울|Seoul"],
-      ["Gyeongbokgung", [126.977, 37.5796], "landmark", "경복궁|Gyeongbokgung"]
+      [
+        "Gyeongbokgung",
+        [126.9766818, 37.579754],
+        "landmark",
+        "경복궁|Gyeongbokgung"
+      ],
+      [
+        "Heolleung motorway exit",
+        [127.0902385, 37.4654316],
+        "highway",
+        "^헌릉$"
+      ]
     ]
   }
 }

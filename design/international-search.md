@@ -35,7 +35,9 @@ null の国情報を返す。緯度は既存と同じ Web Mercator の範囲（�
 Geofabrik の国別 OSM PBF と index-v1.json の抽出範囲を使用する。
 `bin/osm-regions.json` を生成対象と検索検証地点の定義とし、`build-osm-regions.js` が
 各地域の抽出ID・国コード・取得URLを照合して順に生成する。米国専用の境界補完は
-設定の `boundaryConfig` から呼び出し、台湾・韓国には流用しない。
+設定の `boundaryConfig` から呼び出す。台湾は別設定で22県市を確認する。
+高雄市のrelationは抽出範囲外の島を含んで欠けていたため、完全なrelationを補完してから
+配信範囲で切り抜く。抽出範囲外まで対応範囲を広げない。
 `osmium tags-filter` で施設・高速道路・行政境界と参照先を抽出し、`osmium export`
 で multipolygon/boundary relation を組み立てる。生成時の PBF SHA-256 とヘッダを保存。
 無効で組み立てられない OSM オブジェクトのログも成果物に残す。必要な国境ポリゴンを
