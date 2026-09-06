@@ -90,10 +90,12 @@ export function lineDistanceM(position: LngLat, line: LngLat[]): number {
   const kx = EARTH_RADIUS * RAD * Math.cos(position[1] * RAD)
   const ky = EARTH_RADIUS * RAD
   let best = Infinity
+  const longitudeDelta = (longitude: number) =>
+    ((longitude - position[0] + 540) % 360) - 180
   for (let i = 1; i < line.length; i++) {
-    const ax = (line[i - 1][0] - position[0]) * kx
+    const ax = longitudeDelta(line[i - 1][0]) * kx
     const ay = (line[i - 1][1] - position[1]) * ky
-    const bx = (line[i][0] - position[0]) * kx
+    const bx = longitudeDelta(line[i][0]) * kx
     const by = (line[i][1] - position[1]) * ky
     const dx = bx - ax,
       dy = by - ay

@@ -1,0 +1,73 @@
+name: Publish search datasets
+on:
+  workflow_run:
+    workflows: [Update search data, Update OSM data]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: publish-search-datasets
+  cancel-in-progress: false
+
+jobs:
+  eligible:
+    if: (github.event_name == 'workflow_dispatch' && github.ref_name == github.event.repository.default_branch) || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == github.event.repository.default_branch && github.event.workflow_run.head_repository.full_name == github.repository && (github.event.workflow_run.event == 'workflow_dispatch' || github.event.workflow_run.event == 'schedule' || github.event.workflow_run.event == 'push'))
+    runs-on: ubuntu-latest
+    outputs:
+      publish: ${{ steps.check.outputs.publish }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_NAME: ${{ github.event_name }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: |
+          if [ "$EVENT_NAME" = workflow_dispatch ]; then
+            echo 'publish=true' >> "$GITHUB_OUTPUT"
+          else
+            count=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID/artifacts?per_page=100" --jq '[.artifacts[] | select(.expired == false and (.name == "gsi-pages-data" or .name == "osm-pages-data" or .name == "github-pages"))] | length')
+            if [ "$count" -gt 0 ]; then echo 'publish=true' >> "$GITHUB_OUTPUT"; fi
+          fi
+  assemble:
+    needs: eligible
+    if: needs.eligible.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.components.outputs.ready }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci && npm run build
+      - id: components
+        run: node bin/fetch-data-artifacts.js
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - if: steps.components.outputs.ready == 'true'
+        run: node bin/assemble-pages.js tmp/components/japan tmp/components/osm tmp/pages
+      - if: steps.components.outputs.ready == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: tmp/pages
+  deploy:
+    needs: assemble
+    if: needs.assemble.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - uses: actions/deploy-pages@v4
+        id: deployment

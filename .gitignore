@@ -23,3 +23,6 @@ tmp
 
 # Generated search data is published as a Pages artifact, not committed.
 /docs/data/
+/docs/osm/
+__pycache__/
+*.pyc

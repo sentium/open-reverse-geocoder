@@ -1,14 +1,13 @@
 #!/usr/bin/env node
 // Build tooling requires Node.js >=22. The library remains compatible with its existing target.
 const fs = require('fs/promises')
-const { createReadStream, createWriteStream } = require('fs')
+const { createReadStream } = require('fs')
 const path = require('path')
 const { parseArgs } = require('util')
-const { Readable } = require('stream')
-const { pipeline } = require('stream/promises')
 const { createGunzip } = require('zlib')
 const readline = require('readline')
 const { SOURCE, buildDataset, coverageFor } = require('./lib/search-data')
+const { downloadFile } = require('./lib/download-file')
 
 async function main() {
   const { values } = parseArgs({
@@ -57,33 +56,8 @@ async function main() {
     } catch (e) {
       if (e.code !== 'ENOENT') throw e
     }
-    let lastError
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const response = await fetch(url, {
-          signal: AbortSignal.timeout(60000),
-        })
-        if (!response.ok) {
-          await response.body?.cancel()
-          throw new Error(`HTTP ${response.status}: ${url}`)
-        }
-        await fs.mkdir(path.dirname(filename), { recursive: true })
-        const temporary = filename + '.download'
-        await pipeline(
-          Readable.fromWeb(response.body),
-          createWriteStream(temporary),
-        )
-        await fs.rename(temporary, filename)
-        return filename
-      } catch (e) {
-        lastError = e
-        if (attempt < 2)
-          await new Promise((resolve) =>
-            setTimeout(resolve, (attempt + 1) * 1000),
-          )
-      }
-    }
-    throw lastError
+    await downloadFile(url, filename)
+    return filename
   }
   // The catalogue avoids requesting hundreds of thousands of empty ocean tiles.
   const catalogueFile = await cachedFile(

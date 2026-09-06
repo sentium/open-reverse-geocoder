@@ -10,6 +10,7 @@ const {
   buildDataset,
 } = require('../bin/lib/search-data')
 const { validate } = require('../bin/validate-search-data')
+const { downloadFile } = require('../bin/lib/download-file')
 const fixture = (name) =>
   fs.readFile(path.join(__dirname, 'fixtures', `gsi-${name}.pbf`))
 const ebina = {
@@ -20,6 +21,84 @@ const ebina = {
   ],
 }
 const fetchTile = (z) => fixture(`ebina-${z}`)
+
+test('waits through temporary upstream failures and saves a complete download', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'download-retry-'))
+  const filename = path.join(directory, 'tile.pbf')
+  const delays = []
+  let requests = 0
+  try {
+    await downloadFile('https://test.invalid/tile', filename, {
+      fetch: async () =>
+        ++requests <= 3
+          ? new Response('Unavailable', { status: 503 })
+          : new Response('complete tile'),
+      sleep: async (ms) => {
+        delays.push(ms)
+      },
+    })
+    assert.equal(await fs.readFile(filename, 'utf8'), 'complete tile')
+    assert.deepEqual(delays, [1000, 2000, 4000])
+    assert.equal(requests, 4)
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true })
+  }
+})
+
+test('does not retry a missing upstream tile or replace the previous cache', async () => {
+  const directory = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'download-missing-'),
+  )
+  const filename = path.join(directory, 'tile.pbf')
+  try {
+    await fs.writeFile(filename, 'previous')
+    await assert.rejects(
+      downloadFile('https://test.invalid/tile', filename, {
+        fetch: async () => new Response('Missing', { status: 404 }),
+        sleep: async () => {
+          assert.fail('404 must not be retried')
+        },
+      }),
+      /HTTP 404/,
+    )
+    assert.equal(await fs.readFile(filename, 'utf8'), 'previous')
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true })
+  }
+})
+
+test('bounds retries and removes partial downloads after stream failures', async () => {
+  const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'download-broken-'))
+  const filename = path.join(directory, 'tile.pbf')
+  let requests = 0
+  const delays = []
+  try {
+    await assert.rejects(
+      downloadFile('https://test.invalid/tile', filename, {
+        fetch: async () => {
+          requests++
+          return new Response(
+            new ReadableStream({
+              start(controller) {
+                controller.enqueue(new Uint8Array([1, 2]))
+                controller.error(new Error('Connection interrupted'))
+              },
+            }),
+          )
+        },
+        sleep: async (ms) => {
+          delays.push(ms)
+        },
+      }),
+      /Connection interrupted/,
+    )
+    assert.equal(requests, 8)
+    assert.deepEqual(delays, [1000, 2000, 4000, 8000, 16000, 32000, 60000])
+    assert.deepEqual(await fs.readdir(directory), [])
+  } finally {
+    await fs.rm(directory, { recursive: true, force: true })
+  }
+})
 
 test('extracts stations and heritage categories from real GSI data', async () => {
   const data = extract(await fixture('tokyo-14'), 14, 14552, 6451)
