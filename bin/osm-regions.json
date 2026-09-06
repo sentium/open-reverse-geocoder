@@ -18,7 +18,8 @@
         "highway",
         "Exit 10"
       ]
-    ]
+    ],
+    "tileCompression": "gzip"
   },
   "taiwan": {
     "countryCode": "TW",
@@ -43,7 +44,8 @@
         "^五股轉接道$"
       ]
     ],
-    "boundaryConfig": "taiwan-boundaries.json"
+    "boundaryConfig": "taiwan-boundaries.json",
+    "tileCompression": "gzip"
   },
   "south-korea": {
     "countryCode": "KR",
@@ -67,7 +69,8 @@
         "highway",
         "^헌릉$"
       ]
-    ]
+    ],
+    "tileCompression": "gzip"
   },
   "indonesia": {
     "countryCode": "ID",
@@ -159,5 +162,576 @@
       ["Wat Arun", [100.4887, 13.7437], "landmark", "อรุณ|Arun"]
     ],
     "tileCompression": "gzip"
+  },
+  "brazil": {
+    "countryCode": "BR",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "americas",
+    "administrativeSamples": [
+      ["Brasilia", [-47.8825, -15.7942], "BR-DF"],
+      ["Sao Paulo", [-46.6333, -23.5505], "BR-SP"],
+      ["Rio de Janeiro", [-43.1729, -22.9068], "BR-RJ"]
+    ],
+    "nearbySamples": [
+      [
+        "Christ the Redeemer",
+        [-43.2105, -22.9519],
+        "landmark",
+        "Cristo Redentor"
+      ]
+    ]
+  },
+  "mexico": {
+    "countryCode": "MX",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "americas",
+    "administrativeSamples": [
+      ["Mexico City", [-99.1332, 19.4326], "MX-CMX"],
+      ["Guadalajara", [-103.3496, 20.6767], "MX-JAL"],
+      ["Monterrey", [-100.3161, 25.6866], "MX-NLE"]
+    ],
+    "nearbySamples": [
+      [
+        "Palacio de Bellas Artes",
+        [-99.1413, 19.4352],
+        "landmark",
+        "Bellas Artes"
+      ]
+    ]
+  },
+  "albania": {
+    "countryCode": "AL",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Tirana", [19.8187, 41.3275], "AL-11"]],
+    "nearbySamples": [
+      ["Et’hem Bey Mosque", [19.8192, 41.3279], "landmark", "Et.hem|Xhamia"]
+    ]
+  },
+  "andorra": {
+    "countryCode": "AD",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Andorra la Vella", [1.5218, 42.5078], "AD-07"]],
+    "nearbySamples": [
+      ["Casa de la Vall", [1.5211, 42.5075], "landmark", "Casa de la Vall"]
+    ]
+  },
+  "austria": {
+    "countryCode": "AT",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Vienna", [16.3738, 48.2082], "AT-9"]],
+    "nearbySamples": [
+      ["Stephansdom", [16.3731, 48.2085], "landmark", "Stephansdom"]
+    ]
+  },
+  "belarus": {
+    "countryCode": "BY",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Minsk", [27.5615, 53.9023], "BY-HM"]],
+    "nearbySamples": [
+      [
+        "Holy Spirit Cathedral",
+        [27.556, 53.9058],
+        "landmark",
+        "Духа|Духаў|Spirit"
+      ]
+    ]
+  },
+  "belgium": {
+    "countryCode": "BE",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Brussels", [4.3525, 50.8466], "BE-BRU"]],
+    "nearbySamples": [["Manneken Pis", [4.35, 50.845], "landmark", "Manneken"]]
+  },
+  "bosnia-herzegovina": {
+    "countryCode": "BA",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Sarajevo", [18.428, 43.859], "BA-BIH"]],
+    "nearbySamples": [
+      ["Sebilj", [18.4313, 43.8598], "landmark", "Sebilj|Себиљ"]
+    ]
+  },
+  "bulgaria": {
+    "countryCode": "BG",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Sofia", [23.3219, 42.6977], "BG-22"]],
+    "nearbySamples": [
+      [
+        "Alexander Nevsky Cathedral",
+        [23.3329, 42.6959],
+        "landmark",
+        "Невски|Nevsky"
+      ]
+    ]
+  },
+  "croatia": {
+    "countryCode": "HR",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Zagreb", [15.9779, 45.8131], "HR-21"]],
+    "nearbySamples": [
+      [
+        "Zagreb Cathedral",
+        [15.9797, 45.8145],
+        "landmark",
+        "katedrala|Katedrala"
+      ]
+    ]
+  },
+  "cyprus": {
+    "countryCode": "CY",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Nicosia", [33.3617, 35.1725], "CY-01"]],
+    "nearbySamples": [
+      ["Cyprus Museum", [33.3553, 35.1726], "landmark", "Μουσείο|Museum"]
+    ]
+  },
+  "czech-republic": {
+    "countryCode": "CZ",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Prague", [14.4208, 50.0875], "CZ-10"]],
+    "nearbySamples": [
+      [
+        "Prague astronomical clock",
+        [14.4207, 50.087],
+        "landmark",
+        "orloj|Orloj"
+      ]
+    ]
+  },
+  "denmark": {
+    "countryCode": "DK",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Copenhagen", [12.5683, 55.6761], "DK-84"]],
+    "nearbySamples": [
+      [
+        "The Little Mermaid",
+        [12.5993, 55.6929],
+        "landmark",
+        "Havfrue|Mermaid|havfrue"
+      ]
+    ]
+  },
+  "estonia": {
+    "countryCode": "EE",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Tallinn", [24.7536, 59.437], "EE-784"]],
+    "nearbySamples": [
+      [
+        "Alexander Nevsky Cathedral",
+        [24.7393, 59.4358],
+        "landmark",
+        "Nevski|Nevsky"
+      ]
+    ]
+  },
+  "faroe-islands": {
+    "countryCode": "FO",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Torshavn", [-6.7716, 62.0107], "FO"]],
+    "nearbySamples": [
+      [
+        "Torshavn Cathedral",
+        [-6.7718, 62.0092],
+        "landmark",
+        "Havnar|Dómkirkja|dómkirkja"
+      ]
+    ]
+  },
+  "finland": {
+    "countryCode": "FI",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Helsinki", [24.9384, 60.1699], "FI-18"]],
+    "nearbySamples": [
+      [
+        "Helsinki Cathedral",
+        [24.9522, 60.1704],
+        "landmark",
+        "tuomiokirkko|domkyrka"
+      ]
+    ]
+  },
+  "france": {
+    "countryCode": "FR",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [
+      ["Paris", [2.3522, 48.8566], "FR-IDF"],
+      ["Lyon", [4.8357, 45.764], "FR-ARA"],
+      ["Marseille", [5.3698, 43.2965], "FR-PAC"]
+    ],
+    "nearbySamples": [["Eiffel Tower", [2.2945, 48.8583], "landmark", "Eiffel"]]
+  },
+  "georgia": {
+    "countryCode": "GE",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Tbilisi", [44.8015, 41.6938], "GE-TB"]],
+    "nearbySamples": [
+      [
+        "Holy Trinity Cathedral",
+        [44.8165, 41.6976],
+        "landmark",
+        "სამებ|Trinity"
+      ]
+    ]
+  },
+  "germany": {
+    "countryCode": "DE",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [
+      ["Berlin", [13.405, 52.52], "DE-BE"],
+      ["Munich", [11.582, 48.1351], "DE-BY"],
+      ["Hamburg", [9.9937, 53.5511], "DE-HH"]
+    ],
+    "nearbySamples": [
+      ["Brandenburg Gate", [13.3777, 52.5163], "landmark", "Brandenburger Tor"]
+    ]
+  },
+  "greece": {
+    "countryCode": "GR",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Athens", [23.7275, 37.9838], "GR-I"]],
+    "nearbySamples": [
+      ["Parthenon", [23.7264, 37.9715], "landmark", "Παρθενώνας|Parthenon"]
+    ]
+  },
+  "hungary": {
+    "countryCode": "HU",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Budapest", [19.0402, 47.4979], "HU-BU"]],
+    "nearbySamples": [
+      ["Hungarian Parliament", [19.045, 47.507], "landmark", "Országház"]
+    ]
+  },
+  "iceland": {
+    "countryCode": "IS",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Reykjavik", [-21.9426, 64.1466], "IS-1"]],
+    "nearbySamples": [
+      ["Hallgrimskirkja", [-21.9265, 64.1418], "landmark", "Hallgrímskirkja"]
+    ]
+  },
+  "ireland-and-northern-ireland": {
+    "countryCode": "IE",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Dublin", [-6.2603, 53.3498], "IE-D"]],
+    "nearbySamples": [
+      ["Spire of Dublin", [-6.2603, 53.3498], "landmark", "Spire|Spuaic"]
+    ],
+    "countryName": "Ireland"
+  },
+  "italy": {
+    "countryCode": "IT",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [
+      ["Rome", [12.4964, 41.9028], "IT-62"],
+      ["Milan", [9.19, 45.4642], "IT-25"],
+      ["Naples", [14.2681, 40.8518], "IT-72"]
+    ],
+    "nearbySamples": [["Colosseum", [12.4923, 41.8902], "landmark", "Colosseo"]]
+  },
+  "latvia": {
+    "countryCode": "LV",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Riga", [24.1052, 56.9496], "LV-RIX"]],
+    "nearbySamples": [
+      ["Freedom Monument", [24.1132, 56.9515], "landmark", "Brīvības"]
+    ]
+  },
+  "liechtenstein": {
+    "countryCode": "LI",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Vaduz", [9.5209, 47.141], "LI-11"]],
+    "nearbySamples": [
+      ["Vaduz Castle", [9.5244, 47.1395], "landmark", "Schloss Vaduz"]
+    ]
+  },
+  "lithuania": {
+    "countryCode": "LT",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Vilnius", [25.2797, 54.6872], "LT-VL"]],
+    "nearbySamples": [
+      ["Vilnius Cathedral", [25.2879, 54.6858], "landmark", "katedra|Katedra"]
+    ]
+  },
+  "luxembourg": {
+    "countryCode": "LU",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Luxembourg", [6.1319, 49.6116], "LU-LU"]],
+    "nearbySamples": [
+      [
+        "Notre Dame Cathedral",
+        [6.1313, 49.6099],
+        "landmark",
+        "Notre-Dame|Kathedral"
+      ]
+    ]
+  },
+  "macedonia": {
+    "countryCode": "MK",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Skopje", [21.4314, 41.9965], "MK-85"]],
+    "nearbySamples": [
+      ["Stone Bridge", [21.4334, 41.9969], "landmark", "Камен|Stone"]
+    ]
+  },
+  "malta": {
+    "countryCode": "MT",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Valletta", [14.5146, 35.8992], "MT-60"]],
+    "nearbySamples": [
+      ["St Johns Co Cathedral", [14.5128, 35.8977], "landmark", "John|Ġwann"]
+    ]
+  },
+  "moldova": {
+    "countryCode": "MD",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Chisinau", [28.8353, 47.0245], "MD-CU"]],
+    "nearbySamples": [
+      [
+        "Nativity Cathedral",
+        [28.8336, 47.0249],
+        "landmark",
+        "Nașter|Naşter|Catedrala"
+      ]
+    ]
+  },
+  "monaco": {
+    "countryCode": "MC",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Monaco", [7.4246, 43.7384], "MC"]],
+    "nearbySamples": [
+      ["Princes Palace", [7.4209, 43.7311], "landmark", "Palais Princier"]
+    ]
+  },
+  "montenegro": {
+    "countryCode": "ME",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Podgorica", [19.2594, 42.4304], "ME-16"]],
+    "nearbySamples": [
+      [
+        "Cathedral of the Resurrection",
+        [19.2485, 42.4421],
+        "landmark",
+        "Васкрсења|Vaskrsenja|Resurrection"
+      ]
+    ]
+  },
+  "netherlands": {
+    "countryCode": "NL",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Amsterdam", [4.8952, 52.3702], "NL-NH"]],
+    "nearbySamples": [
+      ["Rijksmuseum", [4.8852, 52.36], "landmark", "Rijksmuseum"]
+    ]
+  },
+  "norway": {
+    "countryCode": "NO",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Oslo", [10.7522, 59.9139], "NO-03"]],
+    "nearbySamples": [
+      ["Royal Palace", [10.7276, 59.9169], "landmark", "slott|Slott"]
+    ]
+  },
+  "poland": {
+    "countryCode": "PL",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Warsaw", [21.0122, 52.2297], "PL-14"]],
+    "nearbySamples": [
+      [
+        "Palace of Culture and Science",
+        [21.0067, 52.2318],
+        "landmark",
+        "Pałac Kultury"
+      ]
+    ]
+  },
+  "portugal": {
+    "countryCode": "PT",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Lisbon", [-9.1393, 38.7223], "PT-11"]],
+    "nearbySamples": [
+      ["Belem Tower", [-9.2159, 38.6916], "landmark", "Torre de Belém"]
+    ]
+  },
+  "romania": {
+    "countryCode": "RO",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Bucharest", [26.1025, 44.4268], "RO-B"]],
+    "nearbySamples": [
+      ["Romanian Athenaeum", [26.0971, 44.4413], "landmark", "Ateneul"]
+    ]
+  },
+  "serbia": {
+    "countryCode": "RS",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Belgrade", [20.4489, 44.7866], "RS-00"]],
+    "nearbySamples": [
+      ["Church of Saint Sava", [20.468, 44.7981], "landmark", "Саве|Save|Sava"]
+    ]
+  },
+  "slovakia": {
+    "countryCode": "SK",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Bratislava", [17.1077, 48.1486], "SK-BL"]],
+    "nearbySamples": [
+      ["Bratislava Castle", [17.099, 48.1421], "landmark", "Bratislavský hrad"]
+    ]
+  },
+  "slovenia": {
+    "countryCode": "SI",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Ljubljana", [14.5058, 46.0569], "SI-061"]],
+    "nearbySamples": [
+      ["Ljubljana Castle", [14.5083, 46.0489], "landmark", "Ljubljanski grad"]
+    ]
+  },
+  "spain": {
+    "countryCode": "ES",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [
+      ["Madrid", [-3.7038, 40.4168], "ES-MD"],
+      ["Barcelona", [2.1734, 41.3851], "ES-CT"],
+      ["Seville", [-5.9845, 37.3891], "ES-AN"]
+    ],
+    "nearbySamples": [["Prado Museum", [-3.6921, 40.4138], "landmark", "Prado"]]
+  },
+  "sweden": {
+    "countryCode": "SE",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Stockholm", [18.0686, 59.3293], "SE-AB"]],
+    "nearbySamples": [
+      ["Vasa Museum", [18.0914, 59.328], "landmark", "Vasamuseet"]
+    ]
+  },
+  "switzerland": {
+    "countryCode": "CH",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Bern", [7.4474, 46.948], "CH-BE"]],
+    "nearbySamples": [["Zytglogge", [7.4479, 46.948], "landmark", "Zytglogge"]]
+  },
+  "turkey": {
+    "countryCode": "TR",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Ankara", [32.8597, 39.9334], "TR-06"]],
+    "nearbySamples": [
+      ["Anitkabir", [32.8369, 39.9251], "landmark", "Anıtkabir"]
+    ]
+  },
+  "ukraine": {
+    "countryCode": "UA",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [["Kyiv", [30.5234, 50.4501], "UA-30"]],
+    "nearbySamples": [
+      [
+        "Saint Sophia Cathedral",
+        [30.5145, 50.4529],
+        "landmark",
+        "Софійський|Софії|Sophia"
+      ]
+    ],
+    "countryName": "Ukraine"
+  },
+  "united-kingdom": {
+    "countryCode": "GB",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe",
+    "administrativeSamples": [
+      ["London", [-0.1278, 51.5074], "GB-ENG"],
+      ["Edinburgh", [-3.1883, 55.9533], "GB-SCT"],
+      ["Cardiff", [-3.1791, 51.4816], "GB-WLS"],
+      ["Belfast", [-5.9301, 54.5973], "GB-NIR"]
+    ],
+    "nearbySamples": [
+      ["Big Ben", [-0.1246, 51.5007], "landmark", "Big Ben|Elizabeth Tower"]
+    ]
   }
 }

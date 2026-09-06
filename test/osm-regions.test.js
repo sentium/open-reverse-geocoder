@@ -13,7 +13,7 @@ const { prepare } = require('../bin/prepare-osm-catalog')
 const { check } = require('../bin/check-osm-samples')
 
 test('region selection rejects unknown IDs and mismatched source metadata', () => {
-  assert.deepEqual(selectRegions(), [
+  assert.deepEqual(selectRegions().slice(0, 8), [
     'us',
     'taiwan',
     'south-korea',
@@ -23,6 +23,9 @@ test('region selection rejects unknown IDs and mismatched source metadata', () =
     'philippines',
     'thailand',
   ])
+  assert.equal(selectRegions().length, 55)
+  assert.equal(selectRegions('europe').length, 45)
+  assert.deepEqual(selectRegions('americas'), ['brazil', 'mexico'])
   assert.deepEqual(selectRegions('taiwan'), ['taiwan'])
   assert.throws(() => selectRegions('../us'), /Unknown region/)
   assert.throws(() => selectRegions('constructor'), /Unknown region/)

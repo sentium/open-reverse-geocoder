@@ -12,6 +12,8 @@ const { check } = require('./check-osm-samples')
 
 function selectRegions(region = 'all') {
   if (region === 'all') return Object.keys(configs)
+  if (region === 'europe' || region === 'americas')
+    return Object.keys(configs).filter((id) => configs[id].group === region)
   if (!Object.hasOwn(configs, region))
     throw new Error('Unknown region: ' + region)
   return [region]
