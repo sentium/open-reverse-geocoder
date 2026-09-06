@@ -176,7 +176,7 @@
     "nearbySamples": [
       [
         "Christ the Redeemer",
-        [-43.2105, -22.9519],
+        [-43.2104585, -22.9519173],
         "landmark",
         "Cristo Redentor"
       ],
@@ -499,7 +499,7 @@
       ["Roma Termini", [12.5018, 41.901], "station", "Termini"],
       [
         "Basilica di San Marino",
-        [12.4468, 43.9368],
+        [12.446693573950643, 43.93714675],
         "landmark",
         "Basilica di San Marino",
         "SM"
@@ -536,7 +536,14 @@
     "group": "europe",
     "administrativeSamples": [["Vaduz", [9.5209, 47.141], "LI-11"]],
     "nearbySamples": [
-      ["Vaduz Castle", [9.5244, 47.1395], "landmark", "Schloss Vaduz"]
+      [
+        "Vaduz Castle",
+        [9.5244, 47.1395],
+        "landmark",
+        "Schloss Vaduz",
+        "LI",
+        250
+      ]
     ]
   },
   "lithuania": {
@@ -569,9 +576,16 @@
     "adminZoom": 10,
     "tileCompression": "gzip",
     "group": "europe",
-    "administrativeSamples": [["Skopje", [21.4314, 41.9965], "MK-85"]],
+    "administrativeSamples": [
+      ["Skopje (Centar)", [21.4314, 41.9965], "MK-814"]
+    ],
     "nearbySamples": [
-      ["Stone Bridge", [21.4334, 41.9969], "landmark", "Камен|Stone"]
+      [
+        "Archaeological Museum",
+        [21.434365687802767, 41.9968813],
+        "landmark",
+        "Археолошки музеј на Македонија"
+      ]
     ]
   },
   "malta": {
@@ -593,9 +607,9 @@
     "nearbySamples": [
       [
         "Nativity Cathedral",
-        [28.8336, 47.0249],
+        [28.834528095990116, 47.0260616],
         "landmark",
-        "Nașter|Naşter|Catedrala"
+        "^Catedrala Mitropolitană"
       ]
     ]
   },
@@ -606,7 +620,14 @@
     "group": "europe",
     "administrativeSamples": [["Monaco", [7.4246, 43.7384], "MC"]],
     "nearbySamples": [
-      ["Princes Palace", [7.4209, 43.7311], "landmark", "Palais Princier"]
+      [
+        "Princes Palace",
+        [7.4209, 43.7311],
+        "landmark",
+        "Palais princier de Monaco",
+        "MC",
+        250
+      ]
     ]
   },
   "montenegro": {
@@ -618,9 +639,9 @@
     "nearbySamples": [
       [
         "Cathedral of the Resurrection",
-        [19.2485, 42.4421],
+        [19.248243218059937, 42.4457134],
         "landmark",
-        "Васкрсења|Vaskrsenja|Resurrection"
+        "Hram Hristovog vaskrsenja"
       ]
     ]
   },
@@ -632,7 +653,12 @@
     "administrativeSamples": [["Amsterdam", [4.8952, 52.3702], "NL-NH"]],
     "nearbySamples": [
       ["Rijksmuseum", [4.8852, 52.36], "landmark", "Rijksmuseum"],
-      ["Amsterdam Centraal", [4.9006, 52.378], "station", "Amsterdam Centraal"]
+      [
+        "Amsterdam Centraal",
+        [4.9005805, 52.378901],
+        "station",
+        "Amsterdam Centraal"
+      ]
     ]
   },
   "norway": {
@@ -687,7 +713,12 @@
     "group": "europe",
     "administrativeSamples": [["Belgrade", [20.4489, 44.7866], "RS-00"]],
     "nearbySamples": [
-      ["Church of Saint Sava", [20.468, 44.7981], "landmark", "Саве|Save|Sava"]
+      [
+        "Church of Saint Sava",
+        [20.469188390962003, 44.798045349999995],
+        "landmark",
+        "^Храм Светог Саве$"
+      ]
     ]
   },
   "slovakia": {
@@ -800,9 +831,14 @@
     "adminZoom": 10,
     "tileCompression": "gzip",
     "group": "europe-extra",
-    "administrativeSamples": [["Pristina", [21.1622, 42.6629], "XK"]],
+    "administrativeSamples": [["Pristina", [21.1622, 42.6629], "RS-KM"]],
     "nearbySamples": [
-      ["National Library", [21.1627, 42.6563], "landmark", "Biblioteka|Library"]
+      [
+        "National Library",
+        [21.16233959853227, 42.65751795],
+        "landmark",
+        "Biblioteka|Library"
+      ]
     ],
     "sourceCountryCodes": []
   },
@@ -829,14 +865,20 @@
       ["Saint Helier", [-2.1078, 49.1868], "JE", "JE"]
     ],
     "nearbySamples": [
-      ["Castle Cornet", [-2.5245, 49.4504], "landmark", "Castle Cornet"]
+      [
+        "Castle Cornet",
+        [-2.5266139426455254, 49.453114049999996],
+        "landmark",
+        "Castle Cornet"
+      ]
     ],
     "sourceCountryCodes": [],
     "countryCodes": ["GG", "JE"],
     "countryNames": {
       "GG": "Guernsey",
       "JE": "Jersey"
-    }
+    },
+    "boundaryConfig": "channel-islands-boundaries.json"
   },
   "azores": {
     "countryCode": "PT",
@@ -844,9 +886,16 @@
     "adminZoom": 10,
     "tileCompression": "gzip",
     "group": "europe-extra",
-    "administrativeSamples": [["Ponta Delgada", [-25.6666, 37.7394], "PT-20"]],
+    "administrativeSamples": [
+      ["Ponta Delgada", [-25.66823915953597, 37.74006285], "PT-20"]
+    ],
     "nearbySamples": [
-      ["Portas da Cidade", [-25.6682, 37.7395], "landmark", "Portas da Cidade"]
+      [
+        "Church of Sao Sebastiao",
+        [-25.66823915953597, 37.74006285],
+        "landmark",
+        "Igreja Matriz de São Sebastião"
+      ]
     ],
     "sourceCountryCodes": []
   },
@@ -858,7 +907,12 @@
     "group": "europe-extra",
     "administrativeSamples": [["Las Palmas", [-15.4135, 28.1009], "ES-CN"]],
     "nearbySamples": [
-      ["Casa de Colon", [-15.4142, 28.1016], "landmark", "Casa de Colón"]
+      [
+        "Casa de Colon",
+        [-15.414114127924307, 28.10137685],
+        "landmark",
+        "Casa de Colón"
+      ]
     ],
     "sourceCountryCodes": []
   },
@@ -870,7 +924,12 @@
     "group": "europe-extra",
     "administrativeSamples": [["Longyearbyen", [15.6469, 78.2232], "NO-21"]],
     "nearbySamples": [
-      ["Svalbard Museum", [15.6536, 78.2229], "landmark", "Svalbard [Mm]useum"]
+      [
+        "Svalbard Museum",
+        [15.652313, 78.222378],
+        "landmark",
+        "Svalbard [Mm]useum"
+      ]
     ],
     "sourceCountryCodes": []
   },

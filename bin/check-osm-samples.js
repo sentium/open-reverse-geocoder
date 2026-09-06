@@ -87,11 +87,12 @@ async function check(directory, configs = regionConfigs) {
         kind,
         pattern,
         countryCode = config.countryCode,
+        radiusM = 1000,
       ] of config.nearbySamples) {
         const result = await reverseGeocode(coordinates, {
           source: 'osm',
           osmDataUrl: url,
-          nearby: { rules: [{ kind, radiusM: 1000, priority: 1 }] },
+          nearby: { rules: [{ kind, radiusM, priority: 1 }] },
           region: region.id,
         })
         assert.equal(result.countryCode, countryCode, name)

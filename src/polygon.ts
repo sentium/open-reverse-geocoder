@@ -79,7 +79,13 @@ export function tileBounds([z, x, y]: Tile): [number, number, number, number] {
 
 /** Conservative coverage check: corners alone would miss holes and narrow cuts. */
 export function polygonCoversTile(g: MultiPolygon, tile: Tile): boolean {
-  const [w, s, e, n] = tileBounds(tile)
+  return polygonCoversBounds(g, tileBounds(tile))
+}
+
+export function polygonCoversBounds(
+  g: MultiPolygon,
+  [w, s, e, n]: [number, number, number, number],
+): boolean {
   const corners: LngLat[] = [
     [w, s],
     [e, s],
@@ -93,7 +99,7 @@ export function polygonCoversTile(g: MultiPolygon, tile: Tile): boolean {
         const a = ring[i - 1],
           b = ring[i]
         // Liang–Barsky against the *open* rectangle: any boundary in its
-        // interior means this tile cannot be certified as entirely covered.
+        // interior means this rectangle cannot be certified as entirely covered.
         let lo = 0,
           hi = 1
         for (let axis = 0; axis < 2; axis++) {

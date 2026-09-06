@@ -368,3 +368,68 @@ test('automatic region selection tries a larger extract when a smaller one canno
     reverseGeocode(position, { ...options, region: 'a-small' }),
   ).rejects.toThrow('coverage')
 })
+
+test('small searches in narrow extracts do not require a whole POI tile, but still reject holes', async () => {
+  const manifest = data.get(root + '/us/v1/manifest.json') as {
+    coverageGeometry: MultiPolygon
+  }
+  const [x, y] = position
+  manifest.coverageGeometry = {
+    type: 'MultiPolygon',
+    coordinates: [
+      [
+        [
+          [x - 0.002, y - 0.002],
+          [x + 0.002, y - 0.002],
+          [x + 0.002, y + 0.002],
+          [x - 0.002, y + 0.002],
+          [x - 0.002, y - 0.002],
+        ],
+      ],
+    ],
+  }
+  const nearby = {
+    rules: [{ kind: 'station' as const, radiusM: 100, priority: 1 }],
+  }
+  expect(
+    polygonCoversTile(manifest.coverageGeometry, tileAt(position, 12)),
+  ).toBe(false)
+  expect(
+    (await reverseGeocode(position, { ...options, nearby })).nearby?.selected
+      ?.name,
+  ).toBe('Union Station')
+  clearNearbyCache()
+  manifest.coverageGeometry.coordinates[0].push([
+    [x + 0.0005, y + 0.0005],
+    [x + 0.0006, y + 0.0005],
+    [x + 0.0006, y + 0.0006],
+    [x + 0.0005, y + 0.0006],
+    [x + 0.0005, y + 0.0005],
+  ])
+  await expect(
+    reverseGeocode(position, { ...options, nearby }),
+  ).rejects.toThrow('coverage')
+})
+
+test('catalog entries can point to another static origin without fetching country files from Pages', async () => {
+  const catalog = data.get(root + '/catalog.json') as {
+    regions: { dataUrl?: string }[]
+  }
+  const origin = 'https://tiles.invalid/osm/us'
+  catalog.regions[0].dataUrl = origin
+  for (const [url, value] of [...data.entries()]) {
+    if (url.startsWith(root + '/us/')) {
+      data.set(url.replace(root + '/us', origin), value)
+      data.delete(url)
+    }
+  }
+  expect((await reverseGeocode(position, options)).nearby?.selected?.name).toBe(
+    'Union Station',
+  )
+  expect(get.mock.calls.some(([url]) => url.startsWith(origin))).toBe(true)
+  expect(get.mock.calls.some(([url]) => url.startsWith(root + '/us/'))).toBe(
+    false,
+  )
+  catalog.regions[0].dataUrl = 'https://tiles.invalid/osm?secret=value'
+  expect(() => validateCatalog(catalog)).toThrow('Invalid OSM region')
+})

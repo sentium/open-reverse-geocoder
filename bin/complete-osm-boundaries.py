@@ -25,9 +25,10 @@ def features(filename):
             yield json.loads(line.lstrip('\x1e'))
 
 
-def suitable(feature, code, relation, sample):
+def suitable(feature, code, relation, sample, level=4):
     p = feature.get('properties', {})
-    if p.get('@type') != 'relation' or p.get('@id') != relation or p.get('ISO3166-2') != code or p.get('boundary') != 'administrative' or str(p.get('admin_level')) != '4':
+    iso = (p.get('ISO3166-1:alpha2') or p.get('ISO3166-1')) if level == 2 else p.get('ISO3166-2')
+    if p.get('@type') != 'relation' or p.get('@id') != relation or iso != code or p.get('boundary') != 'administrative' or str(p.get('admin_level')) != str(level):
         return False
     if feature['geometry']['type'] not in ('Polygon', 'MultiPolygon'):
         return False
@@ -54,10 +55,14 @@ def complete(sequence, config, fetch=fetch_boundary):
     sequence = Path(sequence)
     relations = config['relations']
     samples = config.get('samples', {})
+    levels = config.get('levels', {})
+    if any(level not in (2, 4) for level in levels.values()):
+        raise ValueError('Supplemental boundaries must be country or first-level relations')
     found = set()
     for feature in features(sequence):
-        code = feature.get('properties', {}).get('ISO3166-2')
-        if code in relations and suitable(feature, code, relations[code], samples.get(code)):
+        p = feature.get('properties', {})
+        code = (p.get('ISO3166-1:alpha2') or p.get('ISO3166-1')) if str(p.get('admin_level')) == '2' else p.get('ISO3166-2')
+        if code in relations and suitable(feature, code, relations[code], samples.get(code), levels.get(code, 4)):
             found.add(code)
     missing = sorted(set(relations) - found)
     print('Required boundaries present:', len(found), '; missing:', missing, flush=True)
@@ -66,7 +71,7 @@ def complete(sequence, config, fetch=fetch_boundary):
     replacements, provenance = {}, []
     for code in missing:
         feature, source = fetch(code, relations[code])
-        if not suitable(feature, code, relations[code], samples.get(code)):
+        if not suitable(feature, code, relations[code], samples.get(code), levels.get(code, 4)):
             raise ValueError('Incomplete supplemental boundary: ' + code)
         replacements[relations[code]] = feature
         provenance.append(source)

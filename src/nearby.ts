@@ -16,6 +16,7 @@ import {
   tileKey,
   tilesWithin,
   validatePosition,
+  boundsWithin,
 } from './spatial'
 import {
   loadJson,
@@ -26,7 +27,7 @@ import {
   validateRoadTile,
   loadTileIndex,
 } from './search-data'
-import { polygonCoversTile } from './polygon'
+import { polygonCoversBounds } from './polygon'
 
 export const DEFAULT_SEARCH_DATA_URL =
   'https://sentium.github.io/open-reverse-geocoder/data'
@@ -94,8 +95,6 @@ function validateOptions(options: NearbyOptions): void {
 }
 
 function covered(manifest: SearchManifest, tile: Tile): boolean {
-  if (manifest.schemaVersion === 2 && manifest.coverageGeometry)
-    return polygonCoversTile(manifest.coverageGeometry, tile)
   const scale = 2 ** (tile[0] - 12)
   const x = Math.floor(tile[1] / scale),
     y = Math.floor(tile[2] / scale)
@@ -134,9 +133,21 @@ export async function searchNearbyWithManifest(
     (await loadJson(`${dataUrl}/manifest.json`, validateManifest, 60000))
   const base = `${dataUrl}/${manifest.version}`
   const visited = new Set<string>()
-  function prepare(tiles: Tile[]): void {
+  function prepare(tiles: Tile[], radiusM: number): void {
+    const geometry = manifest.schemaVersion === 2 && manifest.coverageGeometry
+    // Edge tiles contain clipped source data. Only the requested search area
+    // must be complete; requiring the whole tile excludes narrow countries.
+    if (
+      geometry &&
+      !boundsWithin(position, radiusM).every((bounds) =>
+        polygonCoversBounds(geometry, bounds),
+      )
+    )
+      throw new SearchCoverageError(
+        'Search radius extends outside the published dataset coverage',
+      )
     for (const t of tiles) {
-      if (!covered(manifest, t))
+      if (!geometry && !covered(manifest, t))
         throw new SearchCoverageError(
           'Search radius extends outside the published dataset coverage',
         )
@@ -148,7 +159,7 @@ export async function searchNearbyWithManifest(
   let highwayMatch: HighwayMatch | undefined
   async function matchHighway(): Promise<boolean> {
     const tiles = tilesWithin(position, 200, 14)
-    prepare(tiles)
+    prepare(tiles, 200)
     const roadKeys = new Set(
       (await loadTileIndex(manifest, base, tiles)).roadTiles,
     )
@@ -188,7 +199,7 @@ export async function searchNearbyWithManifest(
     for (const rule of rules.filter((r) => r.priority === priority)) {
       if (rule.kind === 'highway' && !(await matchHighway())) continue
       const tiles = tilesWithin(position, rule.radiusM, 12)
-      prepare(tiles)
+      prepare(tiles, rule.radiusM)
       const poiKeys = new Set(
         (await loadTileIndex(manifest, base, tiles)).poiTiles,
       )

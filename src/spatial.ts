@@ -42,6 +42,24 @@ export function tilesWithin(
   radiusM: number,
   zoom: number,
 ): Tile[] {
+  const output = new Map<string, Tile>()
+  for (const [left, south, right, north] of boundsWithin(position, radiusM)) {
+    const [, x0, y0] = tileAt([left, north], zoom)
+    const [, x1, y1] = tileAt([right, south], zoom)
+    for (let x = x0; x <= x1; x++)
+      for (let y = y0; y <= y1; y++) {
+        const t: Tile = [zoom, x, y]
+        output.set(tileKey(t), t)
+      }
+  }
+  return [...output.values()]
+}
+
+/** Rectangles enclosing a search circle, split at the antimeridian. */
+export function boundsWithin(
+  position: LngLat,
+  radiusM: number,
+): [number, number, number, number][] {
   const [lng, lat] = position
   const angular = radiusM / EARTH_RADIUS
   const latDelta = angular / RAD
@@ -63,17 +81,7 @@ export function tilesWithin(
       : [[west, east]]
   const north = Math.min(MAX_LAT, lat + latDelta)
   const south = Math.max(-MAX_LAT, lat - latDelta)
-  const output = new Map<string, Tile>()
-  for (const [left, right] of intervals) {
-    const [, x0, y0] = tileAt([left, north], zoom)
-    const [, x1, y1] = tileAt([right, south], zoom)
-    for (let x = x0; x <= x1; x++)
-      for (let y = y0; y <= y1; y++) {
-        const t: Tile = [zoom, x, y]
-        output.set(tileKey(t), t)
-      }
-  }
-  return [...output.values()]
+  return intervals.map(([left, right]) => [left, south, right, north])
 }
 
 export function distanceM(a: LngLat, b: LngLat): number {
