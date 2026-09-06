@@ -38,15 +38,23 @@ async function check(directory, configs = regionConfigs) {
   try {
     for (const region of catalog.regions) {
       const config = configs[region.id]
-      assert.deepEqual(region.countryCodes, [config.countryCode])
-      for (const [name, coordinates, code] of config.administrativeSamples) {
+      assert.deepEqual(
+        region.countryCodes,
+        config.countryCodes ?? [config.countryCode],
+      )
+      for (const [
+        name,
+        coordinates,
+        code,
+        countryCode = config.countryCode,
+      ] of config.administrativeSamples) {
         const result = await reverseGeocode(coordinates, {
           source: 'osm',
           osmDataUrl: url,
           nearby: false,
           region: region.id,
         })
-        assert.equal(result.countryCode, config.countryCode, name)
+        assert.equal(result.countryCode, countryCode, name)
         assert.ok(
           result.administrativeAreas.some((a) => a.code === code),
           `${name}: expected ${code}`,
@@ -58,7 +66,7 @@ async function check(directory, configs = regionConfigs) {
         })
         assert.equal(
           automatic.countryCode,
-          config.countryCode,
+          countryCode,
           name + ' (automatic region)',
         )
         assert.ok(
@@ -73,14 +81,20 @@ async function check(directory, configs = regionConfigs) {
           automaticCountryCode: automatic.countryCode,
         })
       }
-      for (const [name, coordinates, kind, pattern] of config.nearbySamples) {
+      for (const [
+        name,
+        coordinates,
+        kind,
+        pattern,
+        countryCode = config.countryCode,
+      ] of config.nearbySamples) {
         const result = await reverseGeocode(coordinates, {
           source: 'osm',
           osmDataUrl: url,
           nearby: { rules: [{ kind, radiusM: 1000, priority: 1 }] },
           region: region.id,
         })
-        assert.equal(result.countryCode, config.countryCode, name)
+        assert.equal(result.countryCode, countryCode, name)
         assert.match(
           result.nearby.selected?.name ?? '',
           new RegExp(pattern),

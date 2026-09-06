@@ -15,7 +15,7 @@ on:
         type: boolean
         default: false
       region:
-        description: all, europe, americas, or a configured region ID (groups/regions are previews)
+        description: all, europe, europe-core, europe-extra, americas, or a region ID (groups/regions are previews)
         type: string
         default: all
       source_run:
@@ -119,6 +119,7 @@ jobs:
           path: |
             tmp/osm-source/**/features.geojsonseq
             tmp/osm-source/**/region.json
+            tmp/osm-source/**/generation-region.json
             tmp/osm-source/**/SHA256SUMS
             tmp/osm-source/**/snapshot.txt
             tmp/osm-source/**/geometry-errors.log

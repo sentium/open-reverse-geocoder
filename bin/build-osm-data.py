@@ -288,6 +288,10 @@ def build(sequence, region_file, output, version, source_revision, region_id=Non
     region_root.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix='.building-', dir=region_root))
     country_names = {code: (country_name or properties.get('name', code)) if len(codes) == 1 else code for code in codes}
+    for code, name in properties.get('countryNames', {}).items():
+        if code not in codes or not isinstance(name, str) or not name:
+            raise ValueError('Invalid explicit country name')
+        country_names[code] = name
     builder = Builder(stage, coverage, country_names, admin_zoom, compress)
     try:
         with open(sequence, encoding='utf8') as stream:

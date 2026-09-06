@@ -490,12 +490,34 @@
     "administrativeSamples": [
       ["Rome", [12.4964, 41.9028], "IT-62"],
       ["Milan", [9.19, 45.4642], "IT-25"],
-      ["Naples", [14.2681, 40.8518], "IT-72"]
+      ["Naples", [14.2681, 40.8518], "IT-72"],
+      ["San Marino", [12.4473, 43.9367], "SM", "SM"],
+      ["Vatican City", [12.4534, 41.9022], "VA", "VA"]
     ],
     "nearbySamples": [
       ["Colosseum", [12.4923, 41.8902], "landmark", "Colosseo"],
-      ["Roma Termini", [12.5018, 41.901], "station", "Termini"]
-    ]
+      ["Roma Termini", [12.5018, 41.901], "station", "Termini"],
+      [
+        "Basilica di San Marino",
+        [12.4468, 43.9368],
+        "landmark",
+        "Basilica di San Marino",
+        "SM"
+      ],
+      [
+        "Saint Peters Basilica",
+        [12.4539, 41.9022],
+        "landmark",
+        "San Pietro",
+        "VA"
+      ]
+    ],
+    "countryCodes": ["IT", "SM", "VA"],
+    "countryNames": {
+      "IT": "Italy",
+      "SM": "San Marino",
+      "VA": "Vatican City"
+    }
   },
   "latvia": {
     "countryCode": "LV",
@@ -696,12 +718,18 @@
     "administrativeSamples": [
       ["Madrid", [-3.7038, 40.4168], "ES-MD"],
       ["Barcelona", [2.1734, 41.3851], "ES-CT"],
-      ["Seville", [-5.9845, 37.3891], "ES-AN"]
+      ["Seville", [-5.9845, 37.3891], "ES-AN"],
+      ["Gibraltar", [-5.3536, 36.1408], "GI", "GI"]
     ],
     "nearbySamples": [
       ["Prado Museum", [-3.6921, 40.4138], "landmark", "Prado"],
       ["Madrid Atocha", [-3.6907, 40.4067], "station", "Atocha"]
-    ]
+    ],
+    "countryCodes": ["ES", "GI"],
+    "countryNames": {
+      "ES": "Spain",
+      "GI": "Gibraltar"
+    }
   },
   "sweden": {
     "countryCode": "SE",
@@ -764,6 +792,105 @@
     "nearbySamples": [
       ["Big Ben", [-0.1246, 51.5007], "landmark", "Big Ben|Elizabeth Tower"],
       ["Kings Cross", [-0.1233, 51.5308], "station", "King.s Cross|Kings Cross"]
+    ]
+  },
+  "kosovo": {
+    "countryCode": "XK",
+    "countryName": "Kosovo",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe-extra",
+    "administrativeSamples": [["Pristina", [21.1622, 42.6629], "XK"]],
+    "nearbySamples": [
+      ["National Library", [21.1627, 42.6563], "landmark", "Biblioteka|Library"]
+    ],
+    "sourceCountryCodes": []
+  },
+  "isle-of-man": {
+    "countryCode": "IM",
+    "countryName": "Isle of Man",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe-extra",
+    "administrativeSamples": [["Douglas", [-4.4821, 54.1523], "IM"]],
+    "nearbySamples": [
+      ["Manx Museum", [-4.4823, 54.1546], "landmark", "Manx Museum"]
+    ],
+    "sourceCountryCodes": []
+  },
+  "guernsey-jersey": {
+    "countryCode": "GG",
+    "countryName": "Guernsey",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe-extra",
+    "administrativeSamples": [
+      ["Saint Peter Port", [-2.5368, 49.4555], "GG"],
+      ["Saint Helier", [-2.1078, 49.1868], "JE", "JE"]
+    ],
+    "nearbySamples": [
+      ["Castle Cornet", [-2.5245, 49.4504], "landmark", "Castle Cornet"]
+    ],
+    "sourceCountryCodes": [],
+    "countryCodes": ["GG", "JE"],
+    "countryNames": {
+      "GG": "Guernsey",
+      "JE": "Jersey"
+    }
+  },
+  "azores": {
+    "countryCode": "PT",
+    "countryName": "Portugal",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe-extra",
+    "administrativeSamples": [["Ponta Delgada", [-25.6666, 37.7394], "PT-20"]],
+    "nearbySamples": [
+      ["Portas da Cidade", [-25.6682, 37.7395], "landmark", "Portas da Cidade"]
+    ],
+    "sourceCountryCodes": []
+  },
+  "canary-islands": {
+    "countryCode": "ES",
+    "countryName": "Spain",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe-extra",
+    "administrativeSamples": [["Las Palmas", [-15.4135, 28.1009], "ES-CN"]],
+    "nearbySamples": [
+      ["Casa de Colon", [-15.4142, 28.1016], "landmark", "Casa de Colón"]
+    ],
+    "sourceCountryCodes": []
+  },
+  "svalbard-janmayen": {
+    "countryCode": "NO",
+    "countryName": "Norway",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe-extra",
+    "administrativeSamples": [["Longyearbyen", [15.6469, 78.2232], "NO-21"]],
+    "nearbySamples": [
+      ["Svalbard Museum", [15.6536, 78.2229], "landmark", "Svalbard [Mm]useum"]
+    ],
+    "sourceCountryCodes": []
+  },
+  "russia": {
+    "countryCode": "RU",
+    "countryName": "Russia",
+    "adminZoom": 10,
+    "tileCompression": "gzip",
+    "group": "europe-extra",
+    "administrativeSamples": [
+      ["Moscow", [37.6173, 55.7558], "RU-MOW"],
+      ["Saint Petersburg", [30.3158, 59.9391], "RU-SPE"]
+    ],
+    "nearbySamples": [
+      [
+        "Saint Basils Cathedral",
+        [37.6231, 55.7525],
+        "landmark",
+        "Василия|Покрова"
+      ]
     ]
   }
 }

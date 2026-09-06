@@ -12,7 +12,13 @@ const { check } = require('./check-osm-samples')
 
 function selectRegions(region = 'all') {
   if (region === 'all') return Object.keys(configs)
-  if (region === 'europe' || region === 'americas')
+  if (region === 'europe')
+    return Object.keys(configs).filter((id) =>
+      ['europe', 'europe-extra'].includes(configs[id].group),
+    )
+  if (region === 'europe-core')
+    return Object.keys(configs).filter((id) => configs[id].group === 'europe')
+  if (region === 'europe-extra' || region === 'americas')
     return Object.keys(configs).filter((id) => configs[id].group === region)
   if (!Object.hasOwn(configs, region))
     throw new Error('Unknown region: ' + region)
@@ -23,8 +29,10 @@ function selectExtract(index, id) {
   const feature = index.features.find((f) => f.properties.id === id)
   if (
     !feature ||
-    JSON.stringify(feature.properties['iso3166-1:alpha2']) !==
-      JSON.stringify([configs[id].countryCode])
+    JSON.stringify(feature.properties['iso3166-1:alpha2'] ?? []) !==
+      JSON.stringify(
+        configs[id].sourceCountryCodes ?? [configs[id].countryCode],
+      )
   )
     throw new Error('Missing extract or unexpected country codes: ' + id)
   const url = new URL(feature.properties.urls.pbf)
@@ -144,6 +152,22 @@ async function build({
       }
       await fs.unlink(filtered)
     }
+    let regionFile = path.join(input, 'region.json')
+    if (configs[id].countryCodes || configs[id].sourceCountryCodes) {
+      // Keep the original extract metadata intact. Explicit country mappings
+      // also cover microstates within another country's extract and sources
+      // without ISO metadata; actual OSM polygons still determine containment.
+      const feature = JSON.parse(await fs.readFile(regionFile))
+      feature.properties['iso3166-1:alpha2'] = configs[id].countryCodes ?? [
+        configs[id].countryCode,
+      ]
+      feature.properties.countryNames = configs[id].countryNames ?? {
+        [configs[id].countryCode]:
+          configs[id].countryName ?? feature.properties.name,
+      }
+      regionFile = path.join(input, 'generation-region.json')
+      await fs.writeFile(regionFile, JSON.stringify(feature))
+    }
     const sequence = path.join(input, 'features.geojsonseq')
     const python = process.env.OSM_PYTHON || 'python3'
     if (configs[id].boundaryConfig)
@@ -161,7 +185,7 @@ async function build({
       '--input',
       sequence,
       '--region-file',
-      path.join(input, 'region.json'),
+      regionFile,
       '--version',
       version,
       '--admin-zoom',
@@ -184,9 +208,10 @@ async function build({
       'geometry-errors.log',
       'EXPORT-SHA256SUMS',
       'boundary-sources.json',
+      'generation-region.json',
     ]) {
       if (
-        name === 'boundary-sources.json' &&
+        ['boundary-sources.json', 'generation-region.json'].includes(name) &&
         !(await fs.stat(path.join(input, name)).catch(() => null))
       )
         continue
