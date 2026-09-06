@@ -4,7 +4,8 @@ const fs = require('node:fs/promises')
 const path = require('node:path')
 const os = require('node:os')
 const http = require('node:http')
-const { execFileSync } = require('node:child_process')
+const { execFileSync, execFile } = require('node:child_process')
+const { promisify } = require('node:util')
 const { prepare } = require('../bin/prepare-osm-catalog')
 const { assemble } = require('../bin/assemble-pages')
 const { buildDataset } = require('../bin/lib/search-data')
@@ -155,6 +156,20 @@ test('real Washington OSM PBF -> export -> tiled data -> HTTP global API; public
   assert.equal(domestic.source, 'japan')
   assert.equal(domestic.japan.city, '千代田区')
   assert.equal(domestic.nearby.selected.name, '東京駅')
+  const copy = path.join(tmp, 'downloaded-version')
+  await promisify(execFile)(process.execPath, [
+    'bin/download-osm-data.js',
+    root + '/osm/test-us/fixture',
+    copy,
+  ])
+  assert.equal(
+    JSON.parse(await fs.readFile(path.join(copy, 'manifest.json'))).version,
+    'fixture',
+  )
+  assert.match(
+    await fs.readFile(path.join(copy, 'LICENSE.txt'), 'utf8'),
+    /Open Database License/,
+  )
   // A corrupt/missing foreign file must prevent publication, never erase OSM.
   const manifest = JSON.parse(
     await fs.readFile(path.join(output, 'test-us/fixture/manifest.json')),

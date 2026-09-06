@@ -22,14 +22,15 @@ async function prepare(root) {
     )
   }
   if (!regions.length) throw new Error('No datasets')
-  await fs.writeFile(
-    path.join(root, 'catalog.json'),
-    JSON.stringify({
-      schemaVersion: 1,
-      regions: regions.sort((a, b) => a.id.localeCompare(b.id)),
-    }),
-  )
-  return validateOsm(root)
+  const catalog = {
+    schemaVersion: 1,
+    regions: regions.sort((a, b) => a.id.localeCompare(b.id)),
+  }
+  const report = await validateOsm(root, catalog)
+  const pending = path.join(root, '.catalog.json')
+  await fs.writeFile(pending, JSON.stringify(catalog))
+  await fs.rename(pending, path.join(root, 'catalog.json'))
+  return report
 }
 module.exports = { prepare }
 if (require.main === module)

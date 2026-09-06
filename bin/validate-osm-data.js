@@ -13,9 +13,10 @@ const {
   tileBounds,
 } = require('../dist/data-validation')
 
-async function validateOsm(root) {
+async function validateOsm(root, candidateCatalog) {
   const catalog = validateCatalog(
-    JSON.parse(await fs.readFile(path.join(root, 'catalog.json'), 'utf8')),
+    candidateCatalog ??
+      JSON.parse(await fs.readFile(path.join(root, 'catalog.json'), 'utf8')),
   )
   let bytes = 0
   const reports = []

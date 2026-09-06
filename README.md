@@ -80,7 +80,8 @@ https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-v2_4.html
 
 ## ライセンス
 
-MIT
+ソースコードはMITです。配信データには出典ごとの利用条件が適用されます
+（国外のOSM由来データはODbL 1.0）。
 
 ## 駅・名勝・高速道路施設の近傍検索
 

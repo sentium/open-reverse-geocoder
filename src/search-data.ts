@@ -28,6 +28,9 @@ export class SearchDataError extends Error {
   }
 }
 
+/** Internal subtype: a larger published extract may satisfy this request. */
+export class SearchCoverageError extends SearchDataError {}
+
 export function clearNearbyCache(): void {
   cache.clear()
   bytes = 0

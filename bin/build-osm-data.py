@@ -7,10 +7,8 @@ Country/region source polygons are retained as coverage, never their bounding bo
 import argparse
 import collections
 import datetime
-import hashlib
 import json
 import math
-import os
 from pathlib import Path
 import re
 import shutil
@@ -212,10 +210,10 @@ class Builder:
         # envelope, and expose a clearly derived ID rather than an OSM relation ID.
         missing = {code: name for code, name in self.country_names.items() if not self.stats['country:' + code]}
         if not missing: return
-        tiles = list(self.db.execute("SELECT DISTINCT x,y FROM records WHERE kind='admin'"))
+        tiles = list(self.db.execute("SELECT DISTINCT x,y FROM records WHERE kind='admin' AND z=8"))
         found = set()
         for x,y in tiles:
-            areas = [json.loads(row[0]) for row in self.db.execute("SELECT value FROM records WHERE kind='admin' AND x=? AND y=?", (x,y))]
+            areas = [json.loads(row[0]) for row in self.db.execute("SELECT value FROM records WHERE kind='admin' AND z=8 AND x=? AND y=?", (x,y))]
             for code,name in missing.items():
                 parts = [shape(a['geometry']) for a in areas if a['level'] > 2 and isinstance(a['code'], str) and a['code'].startswith(code + '-')]
                 if not parts: continue
@@ -289,14 +287,14 @@ def build(sequence, region_file, output, version, source_revision, region_id=Non
         manifest = dict(schemaVersion=2, version=version, generatedAt=datetime.datetime.now(datetime.timezone.utc).isoformat(), source=properties.get('urls', {}).get('pbf', 'OpenStreetMap'), sourceRevision=source_revision, attribution=ATTRIBUTION, license='ODbL-1.0', licenseUrl=LICENSE_URL, coverage=rectangles, coverageGeometry=as_multipolygon(coverage), poiTiles=[], roadTiles=[], indexTiles=indexes, stats=dict(builder.stats))
         (stage / 'manifest.json').write_text(dump(manifest), encoding='utf8')
         (stage / 'LICENSE.txt').write_text(f'{ATTRIBUTION}\nThis OpenStreetMap-derived database is available under the Open Database License 1.0.\n{LICENSE_URL}\nDownload this version directory to obtain the machine-readable derived database.\n', encoding='utf8')
+        entry = dict(id=region_id, version=version, countryCodes=codes, bounds=bounds)
+        (stage / 'region.json').write_text(dump(entry), encoding='utf8')
         stage.rename(dest)
         # The catalog pins versions, so it can be replaced atomically after all
         # datasets have been validated and composed for publication.
         pointer = region_root / '.manifest.json'
         pointer.write_text(dump(manifest), encoding='utf8')
         pointer.replace(region_root / 'manifest.json')
-        entry = dict(id=region_id, version=version, countryCodes=codes, bounds=bounds)
-        (dest / 'region.json').write_text(dump(entry), encoding='utf8')
         print(dump(dict(region=entry, stats=dict(builder.stats))), flush=True)
         return manifest
     except BaseException:

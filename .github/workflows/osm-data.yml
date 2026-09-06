@@ -80,9 +80,11 @@ jobs:
           node bin/check-osm-samples.js tmp/osm-data
           cp tmp/osm-source/snapshot.txt tmp/osm-source/SHA256SUMS tmp/osm-source/geometry-errors.log tmp/osm-data/
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: osm-data-preview
           path: tmp/osm-data
+          if-no-files-found: ignore
           retention-days: 7
       - uses: actions/upload-artifact@v4
         if: github.ref_name == github.event.repository.default_branch && (github.event_name == 'schedule' || inputs.publish)

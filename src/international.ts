@@ -9,6 +9,7 @@ import {
   loadJson,
   loadTileIndex,
   SearchDataError,
+  SearchCoverageError,
   validateManifest,
 } from './search-data'
 import { polygonContains, validateGeometry } from './polygon'
@@ -227,6 +228,7 @@ export async function reverseGeocode(
         ),
     )
     .sort((a, b) => a.id.localeCompare(b.id))
+  let coverageError: SearchCoverageError | undefined
   for (const region of candidates) {
     const dataUrl = `${root}/${region.id}`
     const base = `${dataUrl}/${region.version}`
@@ -251,14 +253,28 @@ export async function reverseGeocode(
     // Even explicit OSM queries must not replace the domestic source.
     if (country?.countryCode === 'JP')
       throw new UnsupportedRegionError('Use the Japanese data source for Japan')
-    const nearby =
-      options.nearby === false
-        ? undefined
-        : await searchNearbyWithManifest(
-            position,
-            { ...options.nearby, dataUrl },
-            manifest,
-          )
+    if (
+      country?.countryCode &&
+      !region.countryCodes.includes(country.countryCode)
+    )
+      continue
+    let nearby: NearbyResult | undefined
+    try {
+      nearby =
+        options.nearby === false
+          ? undefined
+          : await searchNearbyWithManifest(
+              position,
+              { ...options.nearby, dataUrl },
+              manifest,
+            )
+    } catch (error) {
+      if (error instanceof SearchCoverageError && !options.region) {
+        coverageError = error
+        continue
+      }
+      throw error
+    }
     return {
       source: 'osm',
       countryCode: country?.countryCode ?? null,
@@ -277,5 +293,5 @@ export async function reverseGeocode(
       attribution: manifest.attribution,
     }
   }
-  throw new UnsupportedRegionError()
+  throw coverageError ?? new UnsupportedRegionError()
 }

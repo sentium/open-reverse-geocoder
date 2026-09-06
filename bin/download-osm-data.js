@@ -2,18 +2,33 @@
 // Obtain a complete machine-readable OSM-derived version for reuse under ODbL.
 const fs = require('node:fs/promises')
 const path = require('node:path')
-const { validateManifest, validateIndex } = require('../dist/data-validation')
+const {
+  validateManifest,
+  validateIndex,
+  validatePoiTile,
+  validateRoadTile,
+  validateAdminTile,
+} = require('../dist/data-validation')
 async function download(base, output) {
   if (!/^https?:\/\/[^?#]+$/.test(base || ''))
     throw new Error('Expected immutable version URL')
   base = base.replace(/\/+$/, '')
   await fs.mkdir(output, { recursive: false })
-  async function get(key) {
+  async function get(key, validator) {
     const response = await fetch(base + '/' + key, {
       signal: AbortSignal.timeout(60000),
     })
     if (!response.ok) throw new Error(`HTTP ${response.status}: ${key}`)
-    const buffer = Buffer.from(await response.arrayBuffer())
+    const chunks = []
+    let bytes = 0
+    for await (const chunk of response.body) {
+      bytes += chunk.length
+      if (bytes > 16 * 1024 * 1024)
+        throw new Error('Oversized data file: ' + key)
+      chunks.push(chunk)
+    }
+    const buffer = Buffer.concat(chunks)
+    if (validator) validator(JSON.parse(buffer))
     const dest = path.join(output, key)
     await fs.mkdir(path.dirname(dest), { recursive: true })
     await fs.writeFile(dest, buffer)
@@ -26,17 +41,18 @@ async function download(base, output) {
   const files = []
   for (const key of manifest.indexTiles) {
     const index = validateIndex(JSON.parse(await get(`index/6/${key}.json`)))
-    for (const [kind, z, keys] of [
-      ['poi', 12, index.poiTiles],
-      ['road', 14, index.roadTiles],
-      ['admin', 8, index.adminTiles],
+    for (const [kind, z, keys, validator] of [
+      ['poi', 12, index.poiTiles, validatePoiTile],
+      ['road', 14, index.roadTiles, validateRoadTile],
+      ['admin', 8, index.adminTiles, validateAdminTile],
     ])
-      for (const tile of keys) files.push(`${kind}/${z}/${tile}.json`)
+      for (const tile of keys)
+        files.push([`${kind}/${z}/${tile}.json`, validator])
   }
   let cursor = 0
   await Promise.all(
     Array.from({ length: 4 }, async () => {
-      while (cursor < files.length) await get(files[cursor++])
+      while (cursor < files.length) await get(...files[cursor++])
     }),
   )
   console.log(

@@ -19,7 +19,7 @@ import {
 } from './spatial'
 import {
   loadJson,
-  SearchDataError,
+  SearchCoverageError,
   validateManifest,
   validatePoiTile,
   validateRoadTile,
@@ -93,7 +93,7 @@ function validateOptions(options: NearbyOptions): void {
 }
 
 function covered(manifest: SearchManifest, tile: Tile): boolean {
-  if (manifest.coverageGeometry)
+  if (manifest.schemaVersion === 2 && manifest.coverageGeometry)
     return polygonCoversTile(manifest.coverageGeometry, tile)
   const scale = 2 ** (tile[0] - 12)
   const x = Math.floor(tile[1] / scale),
@@ -136,7 +136,7 @@ export async function searchNearbyWithManifest(
   function prepare(tiles: Tile[]): void {
     for (const t of tiles) {
       if (!covered(manifest, t))
-        throw new SearchDataError(
+        throw new SearchCoverageError(
           'Search radius extends outside the published dataset coverage',
         )
       visited.add(`${t[0]}/${tileKey(t)}`)

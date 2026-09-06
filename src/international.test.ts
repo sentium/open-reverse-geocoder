@@ -290,3 +290,45 @@ test('road distance works across the antimeridian', () => {
     ),
   ).toBeLessThan(12)
 })
+
+test('automatic region selection tries a larger extract when a smaller one cannot cover the radius', async () => {
+  const catalog = data.get(root + '/catalog.json') as {
+    regions: {
+      id: string
+      version: string
+      countryCodes: string[]
+      bounds: number[][]
+    }[]
+  }
+  catalog.regions.unshift({ ...catalog.regions[0], id: 'a-small' })
+  for (const [url, value] of [...data.entries()]) {
+    if (url.startsWith(root + '/us/'))
+      data.set(
+        url.replace('/us/', '/a-small/'),
+        JSON.parse(JSON.stringify(value)),
+      )
+  }
+  const small = data.get(root + '/a-small/v1/manifest.json') as {
+    coverageGeometry: MultiPolygon
+  }
+  small.coverageGeometry = {
+    type: 'MultiPolygon',
+    coordinates: [
+      [
+        [
+          [-77.007, 38.896],
+          [-77.005, 38.896],
+          [-77.005, 38.898],
+          [-77.007, 38.898],
+          [-77.007, 38.896],
+        ],
+      ],
+    ],
+  }
+  expect((await reverseGeocode(position, options)).nearby?.selected?.name).toBe(
+    'Union Station',
+  )
+  await expect(
+    reverseGeocode(position, { ...options, region: 'a-small' }),
+  ).rejects.toThrow('coverage')
+})
