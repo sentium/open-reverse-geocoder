@@ -83,9 +83,18 @@ jobs:
           if [ -n "$SOURCE_RUN" ]; then args+=(--reuse-input); fi
           node bin/build-osm-regions.js --region "$REGION" --source tmp/osm-source --output tmp/osm-data --version "run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" "${args[@]}"
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: osm-build-input
-          path: tmp/osm-source
+          path: |
+            tmp/osm-source/**/features.geojsonseq
+            tmp/osm-source/**/region.json
+            tmp/osm-source/**/SHA256SUMS
+            tmp/osm-source/**/snapshot.txt
+            tmp/osm-source/**/geometry-errors.log
+            tmp/osm-source/**/boundary-sources.json
+            tmp/osm-source/**/EXPORT-SHA256SUMS
+          if-no-files-found: ignore
           retention-days: 7
       - uses: actions/upload-artifact@v4
         if: always()

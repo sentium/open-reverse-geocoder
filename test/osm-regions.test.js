@@ -171,7 +171,7 @@ test('reused inputs must belong to the requested region and output must be fresh
   const options = {
     region: 'taiwan',
     source: path.join(tmp, 'source'),
-    output: path.join(tmp, 'output'),
+    output: path.join(tmp, 'nested/output'),
     version: 'preview',
     reuseInput: true,
   }

@@ -71,6 +71,7 @@ async function build({
   if (!source || !output || !/^[A-Za-z0-9_-]{1,80}$/.test(version || ''))
     throw new Error('Source, output and a valid immutable version are required')
   // Fresh output prevents old or partial regions entering a release.
+  await fs.mkdir(path.dirname(output), { recursive: true })
   await fs.mkdir(output, { recursive: false })
   await fs.mkdir(source, { recursive: true })
   let index
