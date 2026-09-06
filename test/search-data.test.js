@@ -1,0 +1,146 @@
+const { test } = require('node:test')
+const assert = require('node:assert/strict')
+const fs = require('node:fs/promises')
+const os = require('node:os')
+const path = require('node:path')
+const {
+  extract,
+  pointRecord,
+  coverageFor,
+  buildDataset,
+} = require('../bin/lib/search-data')
+const { validate } = require('../bin/validate-search-data')
+const fixture = (name) =>
+  fs.readFile(path.join(__dirname, 'fixtures', `gsi-${name}.pbf`))
+const ebina = {
+  bbox: [139.4, 35.43, 139.401, 35.431],
+  catalog: [
+    [14, 14536, 6465],
+    [11, 1817, 808],
+  ],
+}
+const fetchTile = (z) => fixture(`ebina-${z}`)
+
+test('extracts stations and heritage categories from real GSI data', async () => {
+  const data = extract(await fixture('tokyo-14'), 14, 14552, 6451)
+  assert.ok(data.points.some((p) => p[1] === 'station' && p[2] === '東京駅'))
+  assert.ok(data.roads.length > 0)
+  assert.ok(data.points.every((p) => p.length === 5 && Number.isFinite(p[3])))
+})
+
+test('extracts typed facilities, excludes JCT, and handles fullwidth names', async () => {
+  const data = extract(await fixture('ebina-11'), 11, 1817, 808)
+  assert.ok(data.points.some((p) => p[1] === 'sa' && p[2] === '海老名SA'))
+  assert.ok(data.points.some((p) => p[1] === 'smart-ic' && p[2] === '綾瀬SIC'))
+  assert.ok(data.points.every((p) => !p[2].endsWith('JCT')))
+  const detailed = extract(await fixture('ebina-14'), 14, 14536, 6465)
+  assert.ok(detailed.points.some((p) => p[1] === 'sa' && p[2] === '海老名SA'))
+})
+
+test('stable IDs normalize names and remove exact duplicates without merging remote namesakes', () => {
+  assert.deepEqual(
+    pointRecord('sa', '海老名ＳＡ', [139.4, 35.43]),
+    pointRecord('sa', '海老名SA', [139.4, 35.43]),
+  )
+  assert.notEqual(
+    pointRecord('station', '中央駅', [139, 35])[0],
+    pointRecord('station', '中央駅', [140, 35])[0],
+  )
+  assert.throws(() => coverageFor([140, 36, 139, 35]))
+})
+
+test('builds versioned sparse tiles, validates indexes, and keeps old data on source failure', async (t) => {
+  const outDir = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'geocoder-build-test-'),
+  )
+  t.after(() => fs.rm(outDir, { recursive: true, force: true }))
+  const first = await buildDataset({
+    ...ebina,
+    outDir,
+    version: 'v1',
+    fetchTile,
+  })
+  const report = await validate(outDir)
+  assert.ok(report.points > 0)
+  assert.ok(report.roads > 0)
+  assert.deepEqual(first.coverage, [coverageFor(ebina.bbox)])
+  await assert.rejects(
+    buildDataset({ ...ebina, outDir, version: 'v1', fetchTile }),
+    /already exists/,
+  )
+  await assert.rejects(
+    buildDataset({
+      ...ebina,
+      outDir,
+      version: 'v2',
+      fetchTile: async () => {
+        throw new Error('source offline')
+      },
+    }),
+    /source offline/,
+  )
+  assert.equal(
+    JSON.parse(await fs.readFile(path.join(outDir, 'manifest.json'))).version,
+    'v1',
+  )
+  assert.ok(!(await fs.readdir(outDir)).some((p) => p.startsWith('.building-')))
+  await buildDataset({ ...ebina, outDir, version: 'v2', fetchTile })
+  assert.equal(
+    JSON.parse(await fs.readFile(path.join(outDir, 'manifest.json'))).version,
+    'v2',
+  )
+  assert.ok((await fs.readdir(outDir)).includes('v1'))
+})
+
+test('fails on missing catalogued source, corrupt data and missing output tiles', async (t) => {
+  const outDir = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'geocoder-invalid-test-'),
+  )
+  t.after(() => fs.rm(outDir, { recursive: true, force: true }))
+  await assert.rejects(
+    buildDataset({
+      ...ebina,
+      outDir,
+      version: 'bad',
+      fetchTile: async () => null,
+    }),
+    /missing/,
+  )
+  await assert.rejects(
+    buildDataset({
+      ...ebina,
+      outDir,
+      version: 'bad',
+      fetchTile: async () => Buffer.from('broken'),
+    }),
+  )
+  const m = await buildDataset({ ...ebina, outDir, version: 'v1', fetchTile })
+  await fs.unlink(path.join(outDir, 'v1/poi/12', m.poiTiles[0] + '.json'))
+  await assert.rejects(validate(outDir), /ENOENT/)
+})
+
+test('Pages staging keeps existing admin tiles and the validated manifest together', async (t) => {
+  const { prepare } = require('../bin/prepare-pages')
+  const root = await fs.mkdtemp(path.join(os.tmpdir(), 'geocoder-pages-test-'))
+  t.after(() => fs.rm(root, { recursive: true, force: true }))
+  const outDir = path.join(root, 'data'),
+    siteDir = path.join(root, 'site')
+  const m = await buildDataset({ ...ebina, outDir, version: 'v1', fetchTile })
+  await prepare(outDir, siteDir)
+  assert.equal(
+    JSON.parse(await fs.readFile(path.join(siteDir, 'data/manifest.json')))
+      .version,
+    'v1',
+  )
+  assert.ok(
+    (await fs.stat(path.join(siteDir, 'tiles/10/909/403.pbf'))).size > 0,
+  )
+  assert.ok(
+    (
+      await fs.stat(
+        path.join(siteDir, 'data/v1/poi/12', m.poiTiles[0] + '.json'),
+      )
+    ).size > 0,
+  )
+  await assert.rejects(prepare(outDir, siteDir), /EEXIST/)
+})

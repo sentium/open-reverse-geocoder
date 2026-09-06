@@ -20,3 +20,6 @@ yarn-error.log*
 yarn.lock
 
 tmp
+
+# Generated search data is published as a Pages artifact, not committed.
+/docs/data/

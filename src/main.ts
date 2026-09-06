@@ -4,11 +4,21 @@ import Protobuf from 'pbf'
 import axios from 'axios'
 import { setupCache } from 'axios-cache-adapter'
 import { VectorTile } from '@mapbox/vector-tile'
+import { searchNearby } from './nearby'
+import { NearbyOptions, NearbyResult } from './nearby-types'
+export {
+  searchNearby,
+  DEFAULT_SEARCH_DATA_URL,
+  DEFAULT_SEARCH_RULES,
+} from './nearby'
+export { clearNearbyCache, SearchDataError } from './search-data'
+export * from './nearby-types'
 
 export interface ReverseGeocodingResult {
   code: string
   prefecture: string
   city: string
+  nearby?: NearbyResult
 }
 
 type LngLat = [number, number]
@@ -22,20 +32,22 @@ export interface ReverseGeocodingOptions {
 
   // 検索するレイヤーのID
   layer: string
+  /** Enable optional nearby searches; omitted preserves the legacy API. */
+  nearby?: NearbyOptions
 }
 
 const DEFAULT_OPTIONS: ReverseGeocodingOptions = {
   zoomBase: 10,
   tileUrl: `https://geolonia.github.io/open-reverse-geocoder/tiles/{z}/{x}/{y}.pbf`,
-  layer: 'japanese-admins'
+  layer: 'japanese-admins',
 }
 
 const cache = setupCache({
-  maxAge: 60 * 60 * 24 * 1000
+  maxAge: 60 * 60 * 24 * 1000,
 })
 
 const api = axios.create({
-  adapter: cache.adapter
+  adapter: cache.adapter,
 })
 
 export const openReverseGeocoder: (
@@ -52,7 +64,7 @@ export const openReverseGeocoder: (
     .replace('{x}', String(x))
     .replace('{y}', String(y))
 
-  const geocodingResult = {
+  const geocodingResult: ReverseGeocodingResult = {
     code: '',
     prefecture: '',
     city: '',
@@ -62,8 +74,8 @@ export const openReverseGeocoder: (
 
   try {
     const res = await api.get(tileUrl, { responseType: 'arraybuffer' })
-    buffer =Buffer.from(res.data, 'binary')
-  } catch(error) {
+    buffer = Buffer.from(res.data, 'binary')
+  } catch (error) {
     throw new Error(error)
   }
 
@@ -74,7 +86,7 @@ export const openReverseGeocoder: (
 
   layers.forEach((layerID) => {
     const layer = tile.layers[layerID]
-    if (layer && (options.layer === layer.name)) {
+    if (layer && options.layer === layer.name) {
       for (let i = 0; i < layer.length; i++) {
         const feature = layer.feature(i).toGeoJSON(x, y, options.zoomBase)
         if (layers.length > 1) feature.properties.vt_layer = layerID
@@ -98,5 +110,7 @@ export const openReverseGeocoder: (
     }
   })
 
+  if (options.nearby)
+    geocodingResult.nearby = await searchNearby(lnglat, options.nearby)
   return geocodingResult
 }

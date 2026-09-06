@@ -1,0 +1,86 @@
+name: Update search data
+
+on:
+  pull_request:
+    paths:
+      - 'src/**'
+      - 'bin/**'
+      - 'test/**'
+      - 'package*.json'
+      - '.github/workflows/search-data.yml'
+  workflow_dispatch:
+    inputs:
+      scope:
+        description: Dataset scope (regional builds are never deployed)
+        type: choice
+        options: [region, japan]
+        default: region
+      bbox:
+        description: Regional west,south,east,north
+        default: '139.70,35.62,139.83,35.74'
+      publish:
+        description: Deploy a nationwide build from the default branch to Pages
+        type: boolean
+        default: false
+  schedule:
+    - cron: '23 18 7 1,4,7,10 *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: search-data-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22.x
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - run: npm test && npm run test:data && npm run test:integration
+      - name: Generate current dataset
+        env:
+          SCOPE: ${{ inputs.scope }}
+          BBOX: ${{ inputs.bbox }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = schedule ] || [ "$SCOPE" = japan ]; then
+            npm run build:data -- --all --version "run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --output tmp/generated-data --discard-source-cache
+          else
+            npm run build:data -- --bbox "${BBOX:-139.70,35.62,139.83,35.74}" --version "run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --output tmp/generated-data --discard-source-cache
+          fi
+      - run: npm run validate:data -- tmp/generated-data
+      - run: node bin/prepare-pages.js tmp/generated-data tmp/pages
+      - uses: actions/upload-artifact@v4
+        with:
+          name: search-data-preview
+          path: tmp/pages
+          include-hidden-files: true
+          retention-days: 7
+      - uses: actions/upload-pages-artifact@v3
+        if: github.event_name == 'schedule' || (inputs.publish && inputs.scope == 'japan')
+        with:
+          path: tmp/pages
+
+  deploy:
+    if: github.ref_name == github.event.repository.default_branch && (github.event_name == 'schedule' || (inputs.publish && inputs.scope == 'japan'))
+    needs: generate
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/configure-pages@v5
+      - name: Deploy validated data
+        id: deployment
+        uses: actions/deploy-pages@v4
