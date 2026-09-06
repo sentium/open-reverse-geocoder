@@ -24,3 +24,9 @@ https://opendatacommons.org/licenses/odbl/1-0/
 The OSM integration test adds **synthetic** administrative polygons solely for
 deterministic containment tests. Those polygons are not real US boundaries,
 and no fixture output is used by the production OSM workflow.
+
+`osm-alaska-boundary.json.gz` is the full Alaska relation 1116270, retrieved on
+2026-09-06 from https://www.openstreetmap.org/api/0.6/relation/1116270/full and
+converted with `osmium export -c bin/osm-export.json`. It retains only geometry,
+object ID and selected tags, with no contributor metadata. It is also ODbL 1.0,
+© OpenStreetMap contributors, and tests real dateline-crossing state geometry.

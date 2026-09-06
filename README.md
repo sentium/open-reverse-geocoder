@@ -220,6 +220,8 @@ console.log(result.attribution)        // 利用画面等での出典表示に�
 空配列、国情報は `null` です。最寄りの街を所属自治体として推測しません。
 国全体のOSM境界が抽出データにない場合は、ISO3166-2コードを持つ所属行政界から
 国の範囲を導出し、`osm-derived:country:US` のようなIDで区別します。
+米国の50州とDCの境界は生成時に確認し、抽出データに欠ける境界はOSM APIから完全なrelationを
+取得します。補完元・日時・ハッシュは `boundary-sources.json` に記録します。利用時は静的データだけを取得します。
 
 `source` は `auto`（既定）/ `japan` / `osm`、`osmDataUrl` は国外カタログを置くURL、
 `region` は任意の抽出地域IDです。`japan` オプションで従来の行政界タイルURL等を設定できます。

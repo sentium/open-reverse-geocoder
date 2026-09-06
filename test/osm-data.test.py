@@ -1,4 +1,5 @@
 import importlib.util
+import gzip
 import json
 from pathlib import Path
 import tempfile
@@ -8,6 +9,9 @@ from shapely.geometry import shape
 spec = importlib.util.spec_from_file_location('osm_builder', Path(__file__).parents[1] / 'bin/build-osm-data.py')
 builder = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(builder)
+spec = importlib.util.spec_from_file_location('osm_boundaries', Path(__file__).parents[1] / 'bin/complete-osm-boundaries.py')
+boundaries = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(boundaries)
 
 
 def polygon(w, s, e, n):
@@ -15,6 +19,40 @@ def polygon(w, s, e, n):
 
 
 class OsmDataTest(unittest.TestCase):
+    def test_missing_alaska_boundary_restored_using_real_osm_geometry(self):
+        with gzip.open(Path(__file__).parent / 'fixtures/osm-alaska-boundary.json.gz') as f:
+            alaska = json.load(f)
+        config = {'relations': {'US-AK':1116270}, 'samples': {'US-AK':[-149.89,61.222]}}
+        with tempfile.TemporaryDirectory() as tmp:
+            sequence = Path(tmp) / 'features.jsonseq'
+            incomplete = {**alaska, 'geometry': polygon(-160,50,-159,51)}
+            sequence.write_text(json.dumps(incomplete))
+            calls = []
+            def fetch(code, relation):
+                calls.append((code,relation))
+                return alaska, {'code':code,'relation':relation,'sha256':'test'}
+            boundaries.complete(sequence,config,fetch)
+            restored = [json.loads(line.lstrip('\x1e')) for line in sequence.read_text().strip().split('\n')]
+            self.assertEqual(len(restored),1)
+            self.assertTrue(boundaries.suitable(restored[0],'US-AK',1116270,[-149.89,61.222]))
+            self.assertEqual(boundaries.complete(sequence,config,fetch),[])
+            self.assertEqual(calls,[('US-AK',1116270)])
+            self.assertTrue((Path(tmp)/'boundary-sources.json').exists())
+            geometry = builder.normalize_geojson(restored[0]['geometry'])
+            self.assertTrue(geometry.covers(builder.Point(-149.89,61.222)))
+            self.assertFalse(geometry.covers(builder.Point(0,61.222)))
+
+    def test_invalid_boundary_supplement_preserves_original_input(self):
+        config = {'relations': {'US-AK':1116270}}
+        with tempfile.TemporaryDirectory() as tmp:
+            sequence = Path(tmp) / 'features.jsonseq'
+            sequence.write_text('')
+            invalid = {'type':'Feature','properties':{'@type':'relation','@id':1116270,'ISO3166-2':'US-CA'},'geometry':polygon(-160,50,-159,51)}
+            with self.assertRaisesRegex(ValueError,'Incomplete supplemental'):
+                boundaries.complete(sequence,config,lambda *_: (invalid,{}))
+            self.assertEqual(sequence.read_text(),'')
+            self.assertFalse((Path(tmp)/'boundary-sources.json').exists())
+
     def test_categories_and_road_width(self):
         self.assertEqual(builder.category({'highway':'services'}), 'sa')
         self.assertEqual(builder.category({'highway':'rest_area'}), 'pa')

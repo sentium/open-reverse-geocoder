@@ -7,6 +7,8 @@ on:
       - bin/build-osm-data.py
       - bin/osm-export.json
       - bin/osm-requirements.txt
+      - bin/complete-osm-boundaries.py
+      - bin/us-boundaries.json
       - .github/workflows/osm-data.yml
   workflow_dispatch:
     inputs:
@@ -70,6 +72,10 @@ jobs:
           rm tmp/osm-source/us.osm.pbf
           osmium export tmp/osm-source/filtered.osm.pbf -c bin/osm-export.json -f geojsonseq -o tmp/osm-source/features.geojsonseq --show-errors 2> tmp/osm-source/geometry-errors.log
           rm tmp/osm-source/filtered.osm.pbf
+      - name: Complete missing US state boundaries from OSM
+        run: |
+          python bin/complete-osm-boundaries.py --input tmp/osm-source/features.geojsonseq --config bin/us-boundaries.json
+          sha256sum tmp/osm-source/features.geojsonseq > tmp/osm-source/EXPORT-SHA256SUMS
       - uses: actions/upload-artifact@v4
         with:
           name: osm-build-input
@@ -79,13 +85,17 @@ jobs:
             tmp/osm-source/SHA256SUMS
             tmp/osm-source/snapshot.txt
             tmp/osm-source/geometry-errors.log
+            tmp/osm-source/boundary-sources.json
+            tmp/osm-source/EXPORT-SHA256SUMS
           retention-days: 7
       - name: Build immutable US dataset
         run: |
-          python bin/build-osm-data.py --input tmp/osm-source/features.geojsonseq --region-file tmp/osm-source/region.json --version "run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --source-revision "$(cat tmp/osm-source/SHA256SUMS)" --output tmp/osm-data
+          python bin/build-osm-data.py --input tmp/osm-source/features.geojsonseq --region-file tmp/osm-source/region.json --version "run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --source-revision "$(cat tmp/osm-source/SHA256SUMS tmp/osm-source/EXPORT-SHA256SUMS)" --output tmp/osm-data
           node bin/prepare-osm-catalog.js tmp/osm-data
           node bin/check-osm-samples.js tmp/osm-data
           cp tmp/osm-source/snapshot.txt tmp/osm-source/SHA256SUMS tmp/osm-source/geometry-errors.log tmp/osm-data/
+          cp tmp/osm-source/EXPORT-SHA256SUMS tmp/osm-data/
+          if [ -f tmp/osm-source/boundary-sources.json ]; then cp tmp/osm-source/boundary-sources.json tmp/osm-data/; fi
       - uses: actions/upload-artifact@v4
         if: always()
         with:
