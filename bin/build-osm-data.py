@@ -239,7 +239,9 @@ class Builder:
         self.derive_countries()
         self.db.commit()
         shards = collections.defaultdict(lambda: dict(schemaVersion=1, poiTiles=[], roadTiles=[], adminTiles=[]))
-        sizes = collections.Counter()
+        # Small countries can legitimately have no motorway segments.
+        # Keep explicit zero counts in the manifest for client validation.
+        sizes = collections.Counter(points=0, roads=0, areas=0, tileBytes=0)
         for kind, z, x, y in self.db.execute('SELECT DISTINCT kind,z,x,y FROM records ORDER BY kind,z,x,y'):
             records = [json.loads(row[0]) for row in self.db.execute('SELECT value FROM records WHERE kind=? AND z=? AND x=? AND y=? ORDER BY id', (kind,z,x,y))]
             label = {'poi': 'points', 'road': 'roads', 'admin': 'areas'}[kind]

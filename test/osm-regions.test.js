@@ -117,6 +117,8 @@ test('multiple countries survive catalog composition and each must pass HTTP sea
           },
         },
       ]
+        // Exercise a country with no motorways, as in Andorra's real extract.
+        .filter((f) => id !== 'taiwan' || f.properties.highway !== 'motorway')
         .map((f) => JSON.stringify(f))
         .join('\n') + '\n',
     )

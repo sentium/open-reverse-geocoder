@@ -218,7 +218,12 @@
     "group": "europe",
     "administrativeSamples": [["Andorra la Vella", [1.5218, 42.5078], "AD-07"]],
     "nearbySamples": [
-      ["Casa de la Vall", [1.5211, 42.5075], "landmark", "Casa de la Vall"]
+      [
+        "Casa de la Vall",
+        [1.5205063532945724, 42.5066141],
+        "landmark",
+        "Casa de la Vall"
+      ]
     ]
   },
   "austria": {

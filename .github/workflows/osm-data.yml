@@ -19,7 +19,7 @@ on:
         type: string
         default: all
       source_run:
-        description: Reuse osm-build-input from a prior single-region preview only
+        description: Reuse matching region input artifacts from a prior run (preview only)
         type: string
         default: ''
   schedule:
@@ -59,8 +59,6 @@ jobs:
           const regions = selectRegions(REGION)
           if (PUBLISH === 'true' && (REGION !== 'all' || SOURCE_RUN))
             throw new Error('Publication requires fresh snapshots of all configured regions')
-          if (SOURCE_RUN && regions.length !== 1)
-            throw new Error('Reused sources require a single region')
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `regions=${JSON.stringify(regions)}\nsingle=${regions.length === 1}\n`)
           JS
   generate:
