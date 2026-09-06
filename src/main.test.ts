@@ -1,3 +1,24 @@
+import axios from 'axios'
+import { URL } from 'url'
+import fs from 'fs'
+import path from 'path'
+
+jest.mock('axios', () => {
+  const actual = jest.requireActual('axios')
+  return {
+    ...actual,
+    get: jest.fn(),
+    create: () => ({
+      get: jest.fn(async (url: string) => {
+        const tile = new URL(url).pathname.split('/tiles/')[1]
+        return {
+          data: fs.readFileSync(path.join(__dirname, '../docs/tiles', tile)),
+        }
+      }),
+    }),
+  }
+})
+
 import { openReverseGeocoder as geocoder } from './main'
 
 test('東京駅 [139.7673068, 35.6809591]', async () => {
@@ -43,4 +64,17 @@ test('八丈町 [139.785231, 33.115122]', async () => {
     prefecture: '東京都',
     city: '八丈町',
   })
+})
+
+test('legacy calls do not request optional search data', async () => {
+  await geocoder([139.7673068, 35.6809591])
+  expect(axios.get).not.toHaveBeenCalled()
+})
+
+test('optional nearby result is included only when requested', async () => {
+  const result = await geocoder([139.7673068, 35.6809591], {
+    nearby: { rules: [] },
+  })
+  expect(result.city).toBe('千代田区')
+  expect(result.nearby?.selected).toBeNull()
 })
