@@ -369,6 +369,59 @@ test('automatic region selection tries a larger extract when a smaller one canno
   ).rejects.toThrow('coverage')
 })
 
+test.each([false as const, options.nearby])(
+  'automatic selection prefers a known country over an overlapping partial extract (%p)',
+  async (nearby) => {
+    const catalog = data.get(root + '/catalog.json') as {
+      regions: { id: string; countryCodes: string[] }[]
+    }
+    catalog.regions.unshift({
+      ...catalog.regions[0],
+      id: 'a-partial',
+      countryCodes: ['IE'],
+    })
+    for (const [url, value] of [...data.entries()])
+      if (url.startsWith(root + '/us/'))
+        data.set(
+          url.replace('/us/', '/a-partial/'),
+          JSON.parse(JSON.stringify(value)),
+        )
+    const admin = data.get(root + `/a-partial/v1/admin/8/${key(8)}.json`) as {
+      areas: { level: number; name: string }[]
+    }
+    admin.areas = admin.areas.filter((a) => a.level !== 2)
+    admin.areas[0].name = 'Partial city'
+    const poi = data.get(root + `/a-partial/v1/poi/12/${key(12)}.json`) as {
+      points: [string, string, string, number, number][]
+    }
+    poi.points[0][2] = 'Partial station'
+
+    const selected = await reverseGeocode(position, { ...options, nearby })
+    expect(selected.countryCode).toBe('US')
+    expect(selected.administrativeAreas[1].name).toBe('Test city')
+    if (nearby) expect(selected.nearby?.selected?.name).toBe('Union Station')
+    const explicit = await reverseGeocode(position, {
+      ...options,
+      nearby,
+      region: 'a-partial',
+    })
+    expect(explicit.countryCode).toBeNull()
+    expect(explicit.administrativeAreas[0].name).toBe('Partial city')
+    if (nearby) expect(explicit.nearby?.selected?.name).toBe('Partial station')
+
+    clearNearbyCache()
+    data.delete(root + '/us/v1/manifest.json')
+    await expect(
+      reverseGeocode(position, { ...options, nearby }),
+    ).rejects.toThrow('Could not load')
+    clearNearbyCache()
+    catalog.regions.pop()
+    expect(
+      (await reverseGeocode(position, { ...options, nearby })).countryCode,
+    ).toBeNull()
+  },
+)
+
 test('small searches in narrow extracts do not require a whole POI tile, but still reject holes', async () => {
   const manifest = data.get(root + '/us/v1/manifest.json') as {
     coverageGeometry: MultiPolygon

@@ -6,6 +6,11 @@ on:
     tags: ['*']
   pull_request:
   workflow_dispatch:
+    inputs:
+      preview_source_run:
+        description: Optionally verify all generated OSM regions from a previous run (never publishes)
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -40,6 +45,13 @@ jobs:
       - run: npm run test:osm
         if: matrix.node-version == '22.x'
       - run: npm pack --dry-run
+
+  verify-preview:
+    needs: build
+    if: github.event_name == 'workflow_dispatch' && inputs.preview_source_run != ''
+    uses: ./.github/workflows/verify-osm-preview.yml
+    with:
+      source_run: ${{ inputs.preview_source_run }}
 
   publish:
     name: Publish npm package

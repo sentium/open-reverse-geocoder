@@ -240,6 +240,7 @@ export async function reverseGeocode(
     )
     .sort((a, b) => a.id.localeCompare(b.id))
   let coverageError: SearchCoverageError | undefined
+  let unresolved: GlobalReverseGeocodingResult | undefined
   for (const region of candidates) {
     const dataUrl = (region.dataUrl ?? `${root}/${region.id}`).replace(
       /\/+$/,
@@ -293,7 +294,7 @@ export async function reverseGeocode(
       }
       throw error
     }
-    return {
+    const result: GlobalReverseGeocodingResult = {
       source: 'osm',
       countryCode: country?.countryCode ?? null,
       countryName: country?.name ?? null,
@@ -310,6 +311,12 @@ export async function reverseGeocode(
       dataVersion: manifest.version,
       attribution: manifest.attribution,
     }
+    // An overlapping extract can contain local areas but lack the country's
+    // boundary (e.g. Northern Ireland in an Ireland extract). Prefer another
+    // extract that can identify the country; retain partial results if none can.
+    if (country?.countryCode || options.region) return result
+    if (!unresolved) unresolved = result
   }
+  if (unresolved) return unresolved
   throw coverageError ?? new UnsupportedRegionError()
 }
