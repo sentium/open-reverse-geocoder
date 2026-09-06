@@ -1,4 +1,5 @@
 name: Update OSM data
+run-name: OSM data — ${{ inputs.region || 'all' }}
 
 on:
   push:
@@ -38,7 +39,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: osm-data-${{ github.ref }}
+  group: osm-data-${{ github.ref }}-${{ inputs.region || 'all' }}
   cancel-in-progress: false
 
 jobs:

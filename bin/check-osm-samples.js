@@ -51,11 +51,26 @@ async function check(directory, configs = regionConfigs) {
           result.administrativeAreas.some((a) => a.code === code),
           `${name}: expected ${code}`,
         )
+        const automatic = await reverseGeocode(coordinates, {
+          source: 'osm',
+          osmDataUrl: url,
+          nearby: false,
+        })
+        assert.equal(
+          automatic.countryCode,
+          config.countryCode,
+          name + ' (automatic region)',
+        )
+        assert.ok(
+          automatic.administrativeAreas.some((a) => a.code === code),
+          `${name}: automatic region selection expected ${code}`,
+        )
         results.push({
           region: region.id,
           name,
           coordinates,
           administrativeAreas: result.administrativeAreas,
+          automaticCountryCode: automatic.countryCode,
         })
       }
       for (const [name, coordinates, kind, pattern] of config.nearbySamples) {
