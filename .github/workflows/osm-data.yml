@@ -1,6 +1,9 @@
 name: Update OSM data
 
 on:
+  push:
+    branches: [feat/osm-international]
+    paths: [.github/workflows/osm-data.yml]
   workflow_dispatch:
     inputs:
       publish:
