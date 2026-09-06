@@ -89,10 +89,10 @@ jobs:
           SOURCE_RUN: ${{ inputs.source_run }}
           REGION: ${{ matrix.region }}
         run: |
-          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN/artifacts?per_page=100" > tmp-source-artifacts.json
+          gh api --paginate --slurp "repos/$GITHUB_REPOSITORY/actions/runs/$SOURCE_RUN/artifacts?per_page=100" > tmp-source-artifacts.json
           node <<'JS'
           const fs = require('node:fs')
-          const names = JSON.parse(fs.readFileSync('tmp-source-artifacts.json')).artifacts.filter(a => !a.expired).map(a => a.name)
+          const names = JSON.parse(fs.readFileSync('tmp-source-artifacts.json')).flatMap(page => page.artifacts).filter(a => !a.expired).map(a => a.name)
           const name = ['osm-build-input-' + process.env.REGION, 'osm-build-input'].find(n => names.includes(n))
           if (!name) throw new Error('Missing reusable source artifact')
           fs.appendFileSync(process.env.GITHUB_OUTPUT, `name=${name}\n`)
@@ -158,9 +158,7 @@ jobs:
           const { check } = require('./bin/check-osm-samples')
           async function main() {
             const root = 'tmp/osm-data'
-            const report = await prepare(root)
-            const catalog = JSON.parse(await fs.readFile(root + '/catalog.json'))
-            require('node:assert/strict').deepEqual(catalog.regions.map(r => r.id).sort(), JSON.parse(process.env.EXPECTED_REGIONS).sort())
+            const report = await prepare(root, JSON.parse(process.env.EXPECTED_REGIONS))
             await check(root)
             await fs.writeFile(root + '/validation.json', JSON.stringify(report, null, 2))
             console.log(JSON.stringify(report, null, 2))

@@ -193,7 +193,7 @@ async function build({
       await fs.copyFile(path.join(input, name), path.join(provenance, name))
     }
   }
-  const report = await prepare(output)
+  const report = await prepare(output, regions)
   await check(output)
   await fs.writeFile(
     path.join(output, 'validation.json'),

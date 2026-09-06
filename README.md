@@ -290,11 +290,13 @@ node bin/download-osm-data.js https://sentium.github.io/open-reverse-geocoder/os
 ```sh
 # 台湾だけをローカル生成・検証（出力先は新規ディレクトリ）
 node bin/build-osm-regions.js --region taiwan --source tmp/taiwan-source --output tmp/taiwan-data --version taiwan-preview-1
-# 韓国は --region south-korea、インドは --region india、全対象国は --region all
+# 韓国は --region south-korea、インドは --region india
+# 欧州グループは --region europe、中南米は --region americas、全対象は --region all
 ```
 
-Actionsで単独地域の `region` を指定した生成はプレビュー専用です。
-`source_run` で以前の `osm-build-input` を使う場合も公開できません。
+Actionsは国別に最大4並列で生成し、指定した全地域が揃ってからカタログを構成・検証します。
+単独地域やグループの生成はプレビュー専用です。
+`source_run` で以前の `osm-build-input` / `osm-build-input-{region}` を使う場合も公開できません。
 旧形式の米国入力を再利用する場合は `region=us` を指定します。
 公開には `region=all` で全対象国の新しいスナップショットを取得し、全地域の検証に成功する必要があります。
 単独地域の更新で既存の国がカタログから消えることを防ぎます。国内との合計容量が既存のPages上限を
@@ -303,20 +305,24 @@ Actionsで単独地域の `region` を指定した生成はプレビュー専用
 
 | 対象 | `region` | 国コード | タイル保存形式 |
 | --- | --- | --- | --- |
-| 米国 | `us` | US | JSON |
-| 台湾 | `taiwan` | TW | JSON |
-| 韓国 | `south-korea` | KR | JSON |
+| 米国 | `us` | US | JSON gzip |
+| 台湾 | `taiwan` | TW | JSON gzip |
+| 韓国 | `south-korea` | KR | JSON gzip |
 | インドネシア | `indonesia` | ID | JSON gzip |
 | インド | `india` | IN | JSON gzip |
 | ベトナム | `vietnam` | VN | JSON gzip |
 | フィリピン | `philippines` | PH | JSON gzip |
 | タイ | `thailand` | TH | JSON gzip |
 
-追加5か国の行政界・施設・道路タイルは `.json.gz` として保存し、manifest の
+ブラジル・メキシコと欧州45地域も生成対象に追加しています。範囲・検証状況・全域対応までの残作業は
+[欧州・中南米への拡張](design/europe-expansion.md)を参照してください。生成対象と公開済み範囲は異なり、
+実際に利用できる地域は配信カタログに記載されます。
+
+全OSM地域の新規生成では、行政界・施設・道路タイルを `.json.gz` として保存し、manifest の
 `tileCompression: "gzip"` で識別します。カタログ・manifest・索引は通常のJSONです。
 ライブラリが解凍するため、配信側で特別なContent-Encoding設定は不要です。
 解凍量・JSONの文字列サイズに上限を設け、gzipのチェックサム・長さも検証します。
-既存の非圧縮データもそのまま読み込めます。追加5か国にはこの変更を含むライブラリが必要です。
+既存の非圧縮データもそのまま読み込めます。gzip配信にはこの変更を含むライブラリが必要です。
 全量ダウンロードツールもgzipファイルを取得・検証し、その形式のまま保存します。
 
 インドネシアの原抽出は東ティモールを含みますが、公開カタログの国コードはIDです。

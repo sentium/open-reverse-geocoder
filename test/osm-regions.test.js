@@ -167,6 +167,15 @@ test('multiple countries survive catalog composition and each must pass HTTP sea
   // A damaged second country must block catalog replacement, preserving the
   // previously validated catalog byte for byte.
   const catalog = await fs.readFile(path.join(output, 'catalog.json'), 'utf8')
+  await assert.rejects(
+    prepare(output, ['taiwan', 'south-korea', 'germany']),
+    /requested set/,
+  )
+  await assert.rejects(prepare(output, ['taiwan']), /requested set/)
+  assert.equal(
+    await fs.readFile(path.join(output, 'catalog.json'), 'utf8'),
+    catalog,
+  )
   await fs.unlink(path.join(output, 'taiwan/fixture/LICENSE.txt'))
   await assert.rejects(prepare(output), /ENOENT/)
   assert.equal(

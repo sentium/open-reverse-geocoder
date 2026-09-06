@@ -179,7 +179,8 @@
         [-43.2105, -22.9519],
         "landmark",
         "Cristo Redentor"
-      ]
+      ],
+      ["Luz station", [-46.6353, -23.535], "station", "Luz"]
     ]
   },
   "mexico": {
@@ -198,7 +199,8 @@
         [-99.141263, 19.4354684],
         "landmark",
         "Bellas Artes"
-      ]
+      ],
+      ["Buenavista station", [-99.1524, 19.447], "station", "Buenavista"]
     ]
   },
   "albania": {
@@ -341,12 +343,7 @@
     "group": "europe",
     "administrativeSamples": [["Copenhagen", [12.5683, 55.6761], "DK-84"]],
     "nearbySamples": [
-      [
-        "The Little Mermaid",
-        [12.5993, 55.6929],
-        "landmark",
-        "Havfrue|Mermaid|havfrue"
-      ]
+      ["Kastellet", [12.593744864866316, 55.6913826], "landmark", "^Kastellet$"]
     ]
   },
   "estonia": {
@@ -373,9 +370,9 @@
     "nearbySamples": [
       [
         "Torshavn Cathedral",
-        [-6.7718, 62.0092],
+        [-6.771710641244724, 62.0095873],
         "landmark",
-        "Havnar|Dómkirkja|dómkirkja"
+        "^Havnar Kirkja$"
       ]
     ]
   },
@@ -404,7 +401,10 @@
       ["Lyon", [4.8357, 45.764], "FR-ARA"],
       ["Marseille", [5.3698, 43.2965], "FR-PAC"]
     ],
-    "nearbySamples": [["Eiffel Tower", [2.2945, 48.8583], "landmark", "Eiffel"]]
+    "nearbySamples": [
+      ["Eiffel Tower", [2.2945, 48.8583], "landmark", "Eiffel"],
+      ["Gare du Nord", [2.3553, 48.8809], "station", "Gare du Nord"]
+    ]
   },
   "georgia": {
     "countryCode": "GE",
@@ -432,7 +432,8 @@
       ["Hamburg", [9.9937, 53.5511], "DE-HH"]
     ],
     "nearbySamples": [
-      ["Brandenburg Gate", [13.3777, 52.5163], "landmark", "Brandenburger Tor"]
+      ["Brandenburg Gate", [13.3777, 52.5163], "landmark", "Brandenburger Tor"],
+      ["Berlin Hauptbahnhof", [13.3695, 52.5251], "station", "Hauptbahnhof"]
     ]
   },
   "greece": {
@@ -442,7 +443,12 @@
     "group": "europe",
     "administrativeSamples": [["Athens", [23.7275, 37.9838], "GR-I"]],
     "nearbySamples": [
-      ["Parthenon", [23.7264, 37.9715], "landmark", "Παρθενώνας|Parthenon"]
+      [
+        "Parthenon",
+        [23.7264, 37.9715],
+        "landmark",
+        "Παρθενών|Παρθενώνας|Parthenon"
+      ]
     ]
   },
   "hungary": {
@@ -486,7 +492,10 @@
       ["Milan", [9.19, 45.4642], "IT-25"],
       ["Naples", [14.2681, 40.8518], "IT-72"]
     ],
-    "nearbySamples": [["Colosseum", [12.4923, 41.8902], "landmark", "Colosseo"]]
+    "nearbySamples": [
+      ["Colosseum", [12.4923, 41.8902], "landmark", "Colosseo"],
+      ["Roma Termini", [12.5018, 41.901], "station", "Termini"]
+    ]
   },
   "latvia": {
     "countryCode": "LV",
@@ -600,7 +609,8 @@
     "group": "europe",
     "administrativeSamples": [["Amsterdam", [4.8952, 52.3702], "NL-NH"]],
     "nearbySamples": [
-      ["Rijksmuseum", [4.8852, 52.36], "landmark", "Rijksmuseum"]
+      ["Rijksmuseum", [4.8852, 52.36], "landmark", "Rijksmuseum"],
+      ["Amsterdam Centraal", [4.9006, 52.378], "station", "Amsterdam Centraal"]
     ]
   },
   "norway": {
@@ -688,7 +698,10 @@
       ["Barcelona", [2.1734, 41.3851], "ES-CT"],
       ["Seville", [-5.9845, 37.3891], "ES-AN"]
     ],
-    "nearbySamples": [["Prado Museum", [-3.6921, 40.4138], "landmark", "Prado"]]
+    "nearbySamples": [
+      ["Prado Museum", [-3.6921, 40.4138], "landmark", "Prado"],
+      ["Madrid Atocha", [-3.6907, 40.4067], "station", "Atocha"]
+    ]
   },
   "sweden": {
     "countryCode": "SE",
@@ -706,7 +719,10 @@
     "tileCompression": "gzip",
     "group": "europe",
     "administrativeSamples": [["Bern", [7.4474, 46.948], "CH-BE"]],
-    "nearbySamples": [["Zytglogge", [7.4479, 46.948], "landmark", "Zytglogge"]]
+    "nearbySamples": [
+      ["Zytglogge", [7.4479, 46.948], "landmark", "Zytglogge"],
+      ["Bern station", [7.4394, 46.9487], "station", "^Bern$"]
+    ]
   },
   "turkey": {
     "countryCode": "TR",
@@ -746,7 +762,8 @@
       ["Belfast", [-5.9301, 54.5973], "GB-NIR"]
     ],
     "nearbySamples": [
-      ["Big Ben", [-0.1246, 51.5007], "landmark", "Big Ben|Elizabeth Tower"]
+      ["Big Ben", [-0.1246, 51.5007], "landmark", "Big Ben|Elizabeth Tower"],
+      ["Kings Cross", [-0.1233, 51.5308], "station", "King.s Cross|Kings Cross"]
     ]
   }
 }
