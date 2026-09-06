@@ -161,12 +161,12 @@ npm run validate:data -- docs/data
 GitHub上の **Settings → Pages → Source: GitHub Actions** を設定します。`Update search data` workflowでは、以下の操作ができます。
 
 1. `scope=region`：地域限定の生成・検証・配信用artifact作成。公開はしません。
-2. default branchで `scope=japan, publish=true`：全国生成・検証後にPagesへ配置します。
+2. default branchで `scope=japan, publish=true`：全国生成・検証後、国外の公開用成果物と合わせてPagesへ配置します。
 3. 四半期の定期実行：全国分を更新し、検証に成功した場合だけ配置します。
 
 初回公開後、`https://YOUR-ACCOUNT.github.io/open-reverse-geocoder/data/manifest.json` とそこに記載されたファイルが取得できること、CORS・Content-Encodingのレスポンスヘッダーを確認します。JSONの圧縮は配信側のHTTP圧縮に依存します。
 
-新データと従来の行政区域タイルを同じPages artifactに含めます。生成失敗時は既存公開サイトを変更しません。ロールバックは以前の成功したデータartifactを再配置します（artifact保存は7日）。必要な世代は別途保管してください。
+新データと従来の行政区域タイルを同じPages artifactに含めます。生成失敗時は既存公開サイトを変更しません。ロールバックは以前の成功したデータartifactを再配置します（公開用artifact保存は90日、地域限定previewは7日）。必要な世代は別途保管してください。
 
 ### テスト
 
@@ -189,7 +189,7 @@ npm run test:integration
 - https://www.gsi.go.jp/kikakuchousei/kikakuchousei40182.html
 # 国外の検索（初回公開対象：米国）
 
-`reverseGeocode` は国内・国外で共通のAPIです。日本は従来の国土地理院データを使い、
+`reverseGeocode` は国内・国外で共通のAPIです。日本は従来の行政区域データ（国土数値情報）と近傍データ（国土地理院）を使い、
 国外は公開済みのOSMデータを使います。既存の `openReverseGeocoder` と `searchNearby`
 の既定データ源・戻り値は維持しています。
 
@@ -212,9 +212,13 @@ console.log(result.attribution)        // 利用画面等での出典表示に�
 ```
 
 `nearby: false` で行政地名だけを取得できます。国内の元の結果は `result.japan` に入ります。
+国内の `administrativeAreas` は国・都道府県・市区町村の順で、`level` は `null`、
+都道府県・市区町村の `code` は従来の国内コードです。
 国外の行政界は `{ id, level, name, code, countryCode }` の配列です。OSMの `admin_level`
 の意味は国ごとに異なるため、一律に「州・郡・市」へ変換しません。境界データがない場合は
 空配列、国情報は `null` です。最寄りの街を所属自治体として推測しません。
+国全体のOSM境界が抽出データにない場合は、ISO3166-2コードを持つ所属行政界から
+国の範囲を導出し、`osm-derived:country:US` のようなIDで区別します。
 
 `source` は `auto`（既定）/ `japan` / `osm`、`osmDataUrl` は国外カタログを置くURL、
 `region` は任意の抽出地域IDです。`japan` オプションで従来の行政界タイルURL等を設定できます。
@@ -241,6 +245,13 @@ OSMの収録漏れ・重複・更新状況は地域によって異なります�
 プログラムのMITライセンスや国内データの利用条件と区別してください。
 [OSM利用条件](https://www.openstreetmap.org/copyright) /
 [ジオコーディングの指針](https://osmfoundation.org/wiki/Licence/Community_Guidelines/Geocoding_-_Guideline)
+
+ODbLで再利用するための全データは、カタログにある地域ID・バージョンを使って取得できます。
+Node.js 22以上でリポジトリをビルドした後、次を実行します（出力先は新規ディレクトリ）。
+
+```sh
+node bin/download-osm-data.js https://sentium.github.io/open-reverse-geocoder/osm/us/VERSION ./osm-us-copy
+```
 
 国外の生成には Node.js 22以上、Python 3.12、osmium-tool、
 `pip install -r bin/osm-requirements.txt` が必要です。手順は

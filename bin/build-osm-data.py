@@ -131,9 +131,10 @@ def road_width(tags):
 
 
 class Builder:
-    def __init__(self, stage, coverage):
+    def __init__(self, stage, coverage, country_names=None):
         self.stage = stage
         self.coverage = coverage
+        self.country_names = country_names or {}
         self.db = sqlite3.connect(stage / 'records.sqlite')
         self.db.execute('PRAGMA journal_mode=OFF')
         self.db.execute('PRAGMA synchronous=OFF')
@@ -185,7 +186,7 @@ class Builder:
             for (x, y), polys in cells.items():
                 self.put('admin', 8, x, y, identifier, dict(id=identifier, level=int(tags['admin_level']), name=name, code=code, countryCode=country, geometry=as_multipolygon(unary_union(polys))))
             self.stats['administrativeAreas'] += 1
-            if country: self.stats['country:' + country] += 1
+            if country and cells: self.stats['country:' + country] += 1
         if is_road:
             number = 0
             for x, y, clipped in self.tiled(geometry.intersection(self.coverage), 14):
@@ -204,7 +205,30 @@ class Builder:
             x, y = tile_at(p.x, p.y, 12)
             self.put('poi', 12, x, y, identifier, [identifier, cat, name, p.x, p.y])
 
+    def derive_countries(self):
+        # Country relations can be incomplete in regional PBFs. Containment in
+        # an OSM administrative polygon bearing ISO3166-2=US-XX is independent
+        # evidence of US membership. Union those polygons, never the extract
+        # envelope, and expose a clearly derived ID rather than an OSM relation ID.
+        missing = {code: name for code, name in self.country_names.items() if not self.stats['country:' + code]}
+        if not missing: return
+        tiles = list(self.db.execute("SELECT DISTINCT x,y FROM records WHERE kind='admin'"))
+        found = set()
+        for x,y in tiles:
+            areas = [json.loads(row[0]) for row in self.db.execute("SELECT value FROM records WHERE kind='admin' AND x=? AND y=?", (x,y))]
+            for code,name in missing.items():
+                parts = [shape(a['geometry']) for a in areas if a['level'] > 2 and isinstance(a['code'], str) and a['code'].startswith(code + '-')]
+                if not parts: continue
+                identifier = 'osm-derived:country:' + code
+                self.put('admin',8,x,y,identifier,dict(id=identifier,level=2,name=name,code=code,countryCode=code,geometry=as_multipolygon(unary_union(parts))))
+                found.add(code)
+        for code in found:
+            self.stats['country:' + code] += 1
+            self.stats['derivedCountries'] += 1
+            self.stats['administrativeAreas'] += 1
+
     def finish(self):
+        self.derive_countries()
         self.db.commit()
         shards = collections.defaultdict(lambda: dict(schemaVersion=1, poiTiles=[], roadTiles=[], adminTiles=[]))
         sizes = collections.Counter()
@@ -247,7 +271,8 @@ def build(sequence, region_file, output, version, source_revision, region_id=Non
     if dest.exists(): raise ValueError('Immutable version already exists')
     region_root.mkdir(parents=True, exist_ok=True)
     stage = Path(tempfile.mkdtemp(prefix='.building-', dir=region_root))
-    builder = Builder(stage, coverage)
+    country_names = {code: properties.get('name', code) if len(codes) == 1 else code for code in codes}
+    builder = Builder(stage, coverage, country_names)
     try:
         with open(sequence, encoding='utf8') as stream:
             for i, line in enumerate(stream, 1):

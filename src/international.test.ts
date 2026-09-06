@@ -7,7 +7,7 @@ import {
 import { clearNearbyCache } from './search-data'
 import { MultiPolygon } from './nearby-types'
 import { polygonContains, polygonCoversTile } from './polygon'
-import { tileAt, tileKey } from './spatial'
+import { tileAt, tileKey, lineDistanceM } from './spatial'
 import { openReverseGeocoder } from './japan'
 
 jest.mock('axios', () => ({ get: jest.fn() }))
@@ -178,7 +178,13 @@ test('Japan auto routing preserves the legacy result and does not fetch OSM', as
     city: '千代田区',
   })
   const result = await reverseGeocode([139.767, 35.681], { nearby: false })
-  expect(result.source).toBe('gsi')
+  expect(result.source).toBe('japan')
+  expect(result.administrativeAreas.map((a) => a.name)).toEqual([
+    '日本',
+    '東京都',
+    '千代田区',
+  ])
+  expect(result.attribution).toContain('国土数値情報')
   expect(result.japan).toEqual({
     code: '13101',
     prefecture: '東京都',
@@ -262,4 +268,25 @@ test('a search crossing the extract coverage fails instead of reporting incomple
       nearby: { rules: [{ kind: 'station', radiusM: 50000, priority: 1 }] },
     }),
   ).rejects.toThrow('coverage')
+})
+
+test('road distance works across the antimeridian', () => {
+  expect(
+    lineDistanceM(
+      [-179.9999, 0],
+      [
+        [179.999, 0],
+        [180, 0],
+      ],
+    ),
+  ).toBeLessThan(12)
+  expect(
+    lineDistanceM(
+      [179.9999, 0],
+      [
+        [-180, 0],
+        [-179.999, 0],
+      ],
+    ),
+  ).toBeLessThan(12)
 })

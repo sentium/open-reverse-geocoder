@@ -1,15 +1,16 @@
 name: Update OSM data
 
 on:
-  push:
-    branches: [feat/osm-international]
-    paths: [.github/workflows/osm-data.yml]
   workflow_dispatch:
     inputs:
       publish:
         description: Publish the US dataset from main after validation
         type: boolean
         default: false
+      source_run:
+        description: Reuse osm-build-input from a prior run for preview validation only
+        type: string
+        default: ''
   schedule:
     - cron: '43 18 8 1,4,7,10 *'
 
@@ -36,7 +37,20 @@ jobs:
       - run: npm ci && npm run build
       - run: pip install -r bin/osm-requirements.txt
       - run: sudo apt-get update && sudo apt-get install -y osmium-tool
+      - name: Reject publication of reused preview input
+        if: inputs.source_run && inputs.publish
+        run: |
+          echo 'Reused build inputs are for preview validation only. A publish build must download its own snapshot.'
+          exit 1
+      - uses: actions/download-artifact@v4
+        if: inputs.source_run
+        with:
+          name: osm-build-input
+          run-id: ${{ inputs.source_run }}
+          github-token: ${{ github.token }}
+          path: tmp/osm-source
       - name: Download and filter the US snapshot
+        if: ${{ !inputs.source_run }}
         run: |
           mkdir -p tmp/osm-source
           curl --fail --silent --show-error --location --retry 3 --output tmp/osm-source/regions.json https://download.geofabrik.de/index-v1.json
@@ -48,10 +62,21 @@ jobs:
           rm tmp/osm-source/us.osm.pbf
           osmium export tmp/osm-source/filtered.osm.pbf -c bin/osm-export.json -f geojsonseq -o tmp/osm-source/features.geojsonseq --show-errors 2> tmp/osm-source/geometry-errors.log
           rm tmp/osm-source/filtered.osm.pbf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: osm-build-input
+          path: |
+            tmp/osm-source/features.geojsonseq
+            tmp/osm-source/region.json
+            tmp/osm-source/SHA256SUMS
+            tmp/osm-source/snapshot.txt
+            tmp/osm-source/geometry-errors.log
+          retention-days: 7
       - name: Build immutable US dataset
         run: |
           python bin/build-osm-data.py --input tmp/osm-source/features.geojsonseq --region-file tmp/osm-source/region.json --version "run-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}" --source-revision "$(cat tmp/osm-source/SHA256SUMS)" --output tmp/osm-data
           node bin/prepare-osm-catalog.js tmp/osm-data
+          node bin/check-osm-samples.js tmp/osm-data
           cp tmp/osm-source/snapshot.txt tmp/osm-source/SHA256SUMS tmp/osm-source/geometry-errors.log tmp/osm-data/
       - uses: actions/upload-artifact@v4
         with:

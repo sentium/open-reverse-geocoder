@@ -20,8 +20,8 @@ export const DEFAULT_OSM_DATA_URL =
 
 export interface AdministrativeArea {
   id: string
-  /** OSM admin_level; meanings differ between countries. */
-  level: number
+  /** OSM admin_level; null for Japanese areas from the domestic dataset. */
+  level: number | null
   name: string
   code: string | null
   countryCode: string | null
@@ -39,7 +39,7 @@ export interface GlobalReverseGeocodingOptions {
 }
 
 export interface GlobalReverseGeocodingResult {
-  source: 'gsi' | 'osm'
+  source: 'japan' | 'osm'
   countryCode: string | null
   countryName: string | null
   /** Containing polygons, broad to narrow. No nearest-city inference. */
@@ -63,6 +63,7 @@ export interface OsmCatalog {
   regions: OsmRegion[]
 }
 interface AdminFeature extends AdministrativeArea {
+  level: number
   geometry: MultiPolygon
 }
 interface AdminTile {
@@ -170,14 +171,41 @@ export async function reverseGeocode(
               options.nearby ?? options.japan?.nearby,
             )
       return {
-        source: 'gsi',
+        source: 'japan',
         countryCode: 'JP',
         countryName: '日本',
-        administrativeAreas: [],
+        administrativeAreas: [
+          {
+            id: 'country:JP',
+            level: null,
+            name: '日本',
+            code: 'JP',
+            countryCode: 'JP',
+          },
+          {
+            id: `jp-prefecture:${japan.code.slice(0, 2)}`,
+            level: null,
+            name: japan.prefecture,
+            code: japan.code.slice(0, 2),
+            countryCode: null,
+          },
+          {
+            id: `jp-municipality:${japan.code}`,
+            level: null,
+            name: japan.city,
+            code: japan.code,
+            countryCode: null,
+          },
+        ],
         japan,
         ...(nearby ? { nearby } : {}),
         dataVersion: nearby?.dataVersion ?? '',
-        attribution: nearby?.attribution ?? '国土地理院データを加工して作成',
+        attribution: [
+          '国土数値情報（行政区域）を加工して作成 https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-v2_4.html',
+          nearby?.attribution,
+        ]
+          .filter(Boolean)
+          .join('\n'),
       }
     }
     if (source === 'japan')
@@ -235,7 +263,15 @@ export async function reverseGeocode(
       source: 'osm',
       countryCode: country?.countryCode ?? null,
       countryName: country?.name ?? null,
-      administrativeAreas: areas.map(({ geometry: _geometry, ...a }) => a),
+      administrativeAreas: areas.map(
+        ({ id, level, name, code, countryCode }) => ({
+          id,
+          level,
+          name,
+          code,
+          countryCode,
+        }),
+      ),
       ...(nearby ? { nearby } : {}),
       dataVersion: manifest.version,
       attribution: manifest.attribution,

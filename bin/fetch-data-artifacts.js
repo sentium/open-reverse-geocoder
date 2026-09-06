@@ -9,10 +9,14 @@ if (!repo || !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(repo))
   throw new Error('GITHUB_REPOSITORY is required')
 const api = (endpoint) =>
   JSON.parse(
-    execFileSync('gh', ['api', `repos/${repo}/${endpoint}`], {
-      encoding: 'utf8',
-      maxBuffer: 10 * 1024 * 1024,
-    }),
+    execFileSync(
+      'gh',
+      ['api', `repos/${repo}${endpoint ? '/' + endpoint : ''}`],
+      {
+        encoding: 'utf8',
+        maxBuffer: 10 * 1024 * 1024,
+      },
+    ),
   )
 async function download(workflow, names, destination, required) {
   const branch = api('').default_branch

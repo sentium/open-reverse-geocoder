@@ -34,6 +34,21 @@ class OsmDataTest(unittest.TestCase):
         g=builder.normalize_geojson(p)
         self.assertFalse(g.covers(builder.Point(-77.1,38.7)))
 
+    def test_country_fallback_uses_containing_iso_subdivision_not_extract_envelope(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            b=builder.Builder(Path(tmp),builder.normalize_geojson(polygon(-80,35,-70,45)),{'US':'United States'})
+            state=polygon(-78,38,-76,40)
+            state['coordinates'].extend(polygon(-77.2,38.5,-77,39)['coordinates'])
+            b.add({'type':'Feature','geometry':state,'properties':{'@id':4,'@type':'relation','boundary':'administrative','admin_level':'4','ISO3166-2':'US-DC','name':'Fixture state'}})
+            b.derive_countries()
+            countries=[json.loads(row[0]) for row in b.db.execute("SELECT value FROM records WHERE id='osm-derived:country:US'")]
+            self.assertTrue(countries)
+            union=builder.unary_union([shape(c['geometry']) for c in countries])
+            self.assertTrue(union.covers(builder.Point(-77.5,38.7)))
+            self.assertFalse(union.covers(builder.Point(-77.1,38.7)))
+            self.assertFalse(union.covers(builder.Point(-79,36)))
+            b.db.close()
+
     def test_stream_build_ids_shards_clipping_and_immutable_version(self):
         with tempfile.TemporaryDirectory() as tmp:
             root=Path(tmp)

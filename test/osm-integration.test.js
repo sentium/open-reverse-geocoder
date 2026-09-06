@@ -152,7 +152,7 @@ test('real Washington OSM PBF -> export -> tiled data -> HTTP global API; public
       rules: [{ kind: 'station', radiusM: 1000, priority: 1 }],
     },
   })
-  assert.equal(domestic.source, 'gsi')
+  assert.equal(domestic.source, 'japan')
   assert.equal(domestic.japan.city, '千代田区')
   assert.equal(domestic.nearby.selected.name, '東京駅')
   // A corrupt/missing foreign file must prevent publication, never erase OSM.
