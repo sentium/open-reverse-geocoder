@@ -68,20 +68,23 @@ $ git clone git@github.com:geolonia/open-reverse-geocoder.git
 $ cd open-reverse-geocoder
 ```
 
-Python 3.10以降とtippecanoeを使用します（macOSは `brew install tippecanoe`）。
+Python 3.10以降とtippecanoeを使用します（CI・実データ検証はPython 3.12、macOSのtippecanoeは `brew install tippecanoe`）。
+PyShp 3.1.6を専用の仮想環境へ導入します。
 
 ```sh
 python3 -m venv tmp/japan-admin-venv
 tmp/japan-admin-venv/bin/python -m pip install -r bin/japan-admin-requirements.txt
+tmp/japan-admin-venv/bin/python test/japan-admin.test.py
 PYTHON=tmp/japan-admin-venv/bin/python npm run build:tiles
 ```
 
 国土数値情報の**2026年1月1日時点**の全国行政区域データを取得し、
 `bin/japan-admin-source.json` のSHA-256と照合して生成します。
 修正版が同じURLで公開された場合も、内容を確認してハッシュを更新するまで生成を停止します。
-既に取得済みのZIPは `npm run build:tiles -- --archive /path/to/N03-20260101_GML.zip` で指定できます。
+既に取得済みのZIPは `PYTHON=tmp/japan-admin-venv/bin/python npm run build:tiles -- --archive /path/to/N03-20260101_GML.zip` で指定できます。
 
 全国の地物を1件ずつ読み、郡名・市区町村名・政令指定都市の行政区名を検索用の名称へ変換します。
+UTF-8を明示して読み取り、名称・コードの前後の空白を正規化します。
 所属未定地は原典の都道府県コードと空の市区町村名を保持します。
 ズーム10のPBFタイルと対応する `src/japan-tiles.ts` を再生成し、
 `docs/tiles/manifest.json` に原典・基準日・ハッシュ・生成情報を記録します。

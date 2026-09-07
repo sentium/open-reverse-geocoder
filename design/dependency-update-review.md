@@ -62,6 +62,32 @@ protocol-buffers-schemaも互換範囲内の3.6.1へ更新し、npm audit --omit
 
 根拠: [vector-tile公式メタデータ](https://registry.npmjs.org/@mapbox/vector-tile/3.0.0)、[pbfリリース履歴](https://github.com/mapbox/pbf/releases)、[vector-tile実装](https://github.com/mapbox/vector-tile-js/blob/v3.0.0/index.js)、[d3-geoリリース履歴](https://github.com/d3/d3-geo/releases)。
 
+## PyShp更新の実施結果（Issue #11）
+
+2026-09-08 JSTに[PyPI公式メタデータ](https://pypi.org/pypi/pyshp/3.1.6/json)と[公式変更履歴](https://github.com/GeospatialPython/pyshp/blob/master/changelog.txt)を再確認し、PyShp 2.3.1から3.1.6へ更新した。3.1.6はPython >=3.9を要求し、通常利用の追加依存はない。プロジェクトの国内生成手順はPython 3.10以降を維持し、導入・実データ検証・CIは3.12で確認する。Shapely 2.1.2は据え置き。
+
+- Readerのコンテキスト管理、iterShapeRecords、record.as_dict、shape.__geo_interface__を継続使用。Field・bboxの新しいnamedtuple形式には依存しない。実際の生成ループから読み取り・変換を`iter_features`へ切り出し、同じ処理を固定fixtureでも検証する。全国の地物を1件ずつ処理する方式を維持。
+- `.cpg`のUTF-8、JGD2011の検査と入力SHA-256照合を維持し、Reader・GeoJSON出力ともUTF-8を明示する。3.1.6の`.cpg`自動認識へ任せず、原典の文字コード条件を引き続き検査する。
+- 3系はDBFの前後の空白を以前より保持する。固定fixtureで、空白付きの「所属未定地」が空の市区町村名へ変換されなくなる差を再現したため、空白正規化後に所属未定地を判定するよう修正。不正UTF-8は従来どおり拒否され、例外型はUnicodeDecodeErrorからShapefileExceptionの派生型へ変わることを確認した。
+- `test/fixtures/japan-admin`に旧PyShp 2.3.1で作成した固定Shapefile・入力ハッシュ・旧読み取り結果・旧GeoJSONを保存。UTF-8の地名、先頭ゼロ、郡・政令市の区、所属未定地、前後のタブ・全角空白、Polygon・穴と離れた外周を持つMultiPolygonを検証する。6件のPythonテストが旧版・新版の両方で成功。
+
+### 同一全国入力の比較
+
+入力は固定済みのN03 2026年1月1日時点版`n03-20260101`、`N03-20260101_GML.zip`。旧版・新版の各生成開始時にSHA-256 `1f714fca019e22e6f84012dba420384fc7b49c6ad8bd0a867ab1cfb593a78477`を照合した。Python 3.12.8、tippecanoe 2.79.0を共通とし、更新前main `eb570d8908d4474008461bfc9bc7be6f43f58c3c`の生成コード・PyShp 2.3.1と、更新後コード・新規仮想環境のPyShp 3.1.6から別ディレクトリへ全国生成した。
+
+- 125,130地物、1,898市区町村・7所属未定区域、47都道府県が一致。変換途中の全GeoJSON行、properties、geometryを順序を保って比較し、名称・ID・座標・形状構造の差は0件。
+- 下表は生成処理がtippecanoeへ渡す実際のGeoJSONLと、各行のproperties / geometryをUTF-8のコンパクトJSONと改行で連結したSHA-256。旧版・新版でそれぞれ完全一致した。
+
+| 比較対象 | 更新前後で一致したSHA-256 |
+| --- | --- |
+| 全GeoJSONL | `ddf6d46bd2afcaeab0f43d1b565e9504d8c6a14124063a53baa93ae364223f53` |
+| properties | `c0b7c51689a35fc4c835e9b02b16666cdf42cc7cfbad14b54f84c01035587320` |
+| geometry | `91e3c3e1edb3805b03b344fcebed592e86eec48f8e8876f217fb8ba07cf03f40` |
+
+- 全743 PBFタイル（7,459,990 B）、manifest、READMEの計745ファイルと生成されたタイル索引もバイト単位で一致。新版の全PBFは現在の`docs/tiles`とも一致した。検証用出力はローカルの別ディレクトリに保存し、公開済み行政界データの差し替えは行っていない。
+- 新規Python 3.12.8仮想環境でrequirements導入、pip check、国内行政界6件、OSM Python 8件・Node 7件が成功。Node 22.23.2 / 24.1.0でnpm ci、typecheck、lint、Jest 65件、build、test:data 12件、integration 1件、別ディレクトリへのpack導入・CommonJS・利用側TypeScriptが成功。npm auditは本番・全依存とも0件。
+- Chromeで新版から再生成したPBFとJSON・生gzip・HTTP gzipを別オリジンから取得し、千代田区・東京駅の検索、キャッシュ、404、Bufferグローバルなしを確認。Node最低22・公開API・CommonJS・検索結果の互換性を維持。残件なし。
+
 ## 第1段階の検証結果
 
 - Node 24.1.0および22.23.2で型検査・lint・Jest 65件・ビルドを検証。
