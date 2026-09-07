@@ -188,8 +188,8 @@ export async function searchNearbyWithManifest(
       distanceM: Number.isFinite(matched)
         ? matched
         : Number.isFinite(nearest)
-        ? nearest
-        : null,
+          ? nearest
+          : null,
     }
     return Number.isFinite(matched)
   }

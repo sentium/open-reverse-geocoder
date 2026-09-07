@@ -74,11 +74,11 @@ export function boundsWithin(
           [-180, east],
         ]
       : east > 180
-      ? [
-          [west, 180],
-          [-180, east - 360],
-        ]
-      : [[west, east]]
+        ? [
+            [west, 180],
+            [-180, east - 360],
+          ]
+        : [[west, east]]
   const north = Math.min(MAX_LAT, lat + latDelta)
   const south = Math.max(-MAX_LAT, lat - latDelta)
   return intervals.map(([left, right]) => [left, south, right, north])
