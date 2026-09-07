@@ -44,8 +44,8 @@ protocol-buffers-schemaも互換範囲内の3.6.1へ更新し、npm audit --omit
 | サイズ（全dist JS / npm pack） | 更新前 | 更新後 |
 | --- | ---: | ---: |
 | dist JavaScript合計 | 68,409 B | 108,072 B |
-| npm tarball | 33,612 B | 44,454 B |
-| npm展開後（型・README・ライセンス含む） | 106,644 B | 155,351 B |
+| npm tarball | 33,612 B | 44,455 B |
+| npm展開後（型・README・ライセンス含む） | 106,644 B | 155,350 B |
 
 - Node 22.23.2 / 24.1.0、npm 11.6.1でnpm ci、typecheck、lint、Jest 65件、build、test:data 12件、integration 1件、別ディレクトリのpack導入・CommonJS・利用側TypeScript 1件が成功。Python 3.12.8で国内行政界3件、OSM Python 8件・Node 7件も成功。
 - Chromeで別オリジンのPBFと通常JSON・gzipバイト列・HTTP Content-Encoding gzipを取得し、千代田区／東京駅の検索、キャッシュ再利用、404、Bufferグローバルなしを確認。
