@@ -50,7 +50,15 @@ protocol-buffers-schemaも互換範囲内の3.6.1へ更新し、npm audit --omit
 - Node 22.23.2 / 24.1.0、npm 11.6.1でnpm ci、typecheck、lint、Jest 65件、build、test:data 12件、integration 1件、別ディレクトリのpack導入・CommonJS・利用側TypeScript 1件が成功。Python 3.12.8で国内行政界3件、OSM Python 8件・Node 7件も成功。
 - Chromeで別オリジンのPBFと通常JSON・gzipバイト列・HTTP Content-Encoding gzipを取得し、千代田区／東京駅の検索、キャッシュ再利用、404、Bufferグローバルなしを確認。
 - npm auditは本番のみ・全依存とも0件。残件なし。
-- `bin/lib/search-data.js`のマージは既存workflowの全国近傍データ再生成と後続Pages公開を起動する。ユーザー承認済み。実行結果・公開URL・run IDは本Issueの完了コメントに記録する。
+- 公開済みOSMの13地域・71サンプルも、同じ取得バイト列を旧版・新版で読み、検索結果の完全一致を確認した。
+
+### マージ後の全国データ検証（2026-09-08 JST）
+
+- [PR #13](https://github.com/sentium/open-reverse-geocoder/pull/13)の検証済みhead `76cbeaed14d71d4c502e13fd7c546228afe34b7e`をmain `989501e53b56d25a6b75d4fc12f058151b45298c`へマージし、tree一致と[mainのNode 22/24 CI](https://github.com/sentium/open-reverse-geocoder/actions/runs/34130384148)成功を確認した。
+- 承認済みの[全国生成・検証](https://github.com/sentium/open-reverse-geocoder/actions/runs/34130383660)が成功。版は`run-34130383660-1`、入力144,268タイル・6,560,205,059 B、欠損0件、ポイント26,110件、道路172,715件。
+- 旧公開版`run-34045813898-1`と新版の`gsi-pages-data`成果物をそれぞれ取得して比較した。版名・日時を含むmanifestを除く全13,290データファイルの相対パスとSHA-256が一致し、追加・削除・変更は0件。入力件数・バイト数・地物数も一致した。
+- [Pages公開](https://github.com/sentium/open-reverse-geocoder/actions/runs/34144367598)のeligible・assemble・deployがすべて成功。[公開manifest](https://sentium.github.io/open-reverse-geocoder/data/manifest.json)の版`run-34130383660-1`と欠損0件を確認した。既存OSMカタログ（13地域）と行政界tile manifestのSHA-256は公開前後で一致。
+- 公開後に国内5地点（千代田区・大阪市北区・羅臼町・浜松市中央区・浜名区）と東京駅の検索を検証。Chromeでも別オリジンから実際のPages上のPBF・JSONを取得し、千代田区・東京駅の検索とBufferグローバルなしでの動作が成功した。全国生成・公開を含む残件なし。
 
 根拠: [vector-tile公式メタデータ](https://registry.npmjs.org/@mapbox/vector-tile/3.0.0)、[pbfリリース履歴](https://github.com/mapbox/pbf/releases)、[vector-tile実装](https://github.com/mapbox/vector-tile-js/blob/v3.0.0/index.js)、[d3-geoリリース履歴](https://github.com/d3/d3-geo/releases)。
 
