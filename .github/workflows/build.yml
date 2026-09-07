@@ -31,6 +31,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
+      - run: npm install --global npm@11.6.1
       - run: npm ci
       - run: npm audit --omit=dev
       - run: npm run typecheck
@@ -50,6 +51,7 @@ jobs:
       - run: npm run test:osm
         if: matrix.node-version == '22.x'
       - run: npm pack --dry-run
+      - run: npm run test:package
 
   verify-preview:
     needs: build
