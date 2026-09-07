@@ -9,6 +9,8 @@
 /*.shx
 /docs/tiles/*
 !/docs/tiles/10
+!/docs/tiles/README.txt
+!/docs/tiles/manifest.json
 
 npm-debug.log*
 yarn-debug.log*

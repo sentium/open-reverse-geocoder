@@ -66,6 +66,24 @@ test('八丈町 [139.785231, 33.115122]', async () => {
   })
 })
 
+test('2024年の区再編後の浜松駅は浜松市中央区（22138）', async () => {
+  const res = await geocoder([137.7345, 34.7038])
+  expect(res).toStrictEqual({
+    code: '22138',
+    prefecture: '静岡県',
+    city: '浜松市中央区',
+  })
+})
+
+test('旧浜北区の浜北駅は浜松市浜名区（22139）', async () => {
+  const res = await geocoder([137.7845, 34.7917])
+  expect(res).toStrictEqual({
+    code: '22139',
+    prefecture: '静岡県',
+    city: '浜松市浜名区',
+  })
+})
+
 test('legacy calls do not request optional search data', async () => {
   await geocoder([139.7673068, 35.6809591])
   expect(axios.get).not.toHaveBeenCalled()

@@ -46,6 +46,8 @@ jobs:
           python-version: '3.12'
       - run: pip install -r bin/osm-requirements.txt && sudo apt-get update && sudo apt-get install -y osmium-tool
         if: matrix.node-version == '22.x'
+      - run: pip install -r bin/japan-admin-requirements.txt && python test/japan-admin.test.py
+        if: matrix.node-version == '22.x'
       - run: npm run test:osm
         if: matrix.node-version == '22.x'
       - run: npm pack --dry-run

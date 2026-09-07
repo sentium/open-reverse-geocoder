@@ -30,7 +30,7 @@ export interface ReverseGeocodingOptions {
 
 const DEFAULT_OPTIONS: ReverseGeocodingOptions = {
   zoomBase: 10,
-  tileUrl: `https://geolonia.github.io/open-reverse-geocoder/tiles/{z}/{x}/{y}.pbf`,
+  tileUrl: `https://sentium.github.io/open-reverse-geocoder/tiles/{z}/{x}/{y}.pbf`,
   layer: 'japanese-admins',
 }
 

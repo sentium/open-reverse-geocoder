@@ -203,7 +203,7 @@ export async function reverseGeocode(
         ...(nearby ? { nearby } : {}),
         dataVersion: nearby?.dataVersion ?? '',
         attribution: [
-          '国土数値情報（行政区域）を加工して作成 https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-v2_4.html',
+          '国土数値情報（行政区域2026年版、国土交通省）を加工して作成 https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2026.html CC BY 4.0 https://creativecommons.org/licenses/by/4.0/',
           nearby?.attribution,
         ]
           .filter(Boolean)

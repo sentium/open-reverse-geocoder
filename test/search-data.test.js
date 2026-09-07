@@ -214,6 +214,19 @@ test('Pages staging keeps existing admin tiles and the validated manifest togeth
   assert.ok(
     (await fs.stat(path.join(siteDir, 'tiles/10/909/403.pbf'))).size > 0,
   )
+  const admin = JSON.parse(
+    await fs.readFile(path.join(siteDir, 'tiles/manifest.json'), 'utf8'),
+  )
+  assert.equal(admin.sourceDate, '2026-01-01')
+  assert.equal(admin.license, 'CC-BY-4.0')
+  assert.match(
+    await fs.readFile(path.join(siteDir, 'tiles/README.txt'), 'utf8'),
+    /creativecommons\.org\/licenses\/by\/4\.0/,
+  )
+  assert.match(
+    await fs.readFile(path.join(siteDir, 'data/README.txt'), 'utf8'),
+    /kikakuchousei40182\.html/,
+  )
   assert.ok(
     (
       await fs.stat(
