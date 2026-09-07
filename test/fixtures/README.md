@@ -30,3 +30,10 @@ and no fixture output is used by the production OSM workflow.
 converted with `osmium export -c bin/osm-export.json`. It retains only geometry,
 object ID and selected tags, with no contributor metadata. It is also ODbL 1.0,
 © OpenStreetMap contributors, and tests real dateline-crossing state geometry.
+
+`geography-baseline.json` records the input SHA-256 and old decoded/extracted output
+from commit 178a3adb181f9aa816414fcbd5b31f4c7a2683f7 before the geographic dependency
+major update. It covers the three GSI fixtures and all 743 checked-in administrative
+tiles. The normalized hashes use eight decimal places solely to account for measured
+inverse-Mercator rounding changes; the original hashes are retained. See
+`design/dependency-update-review.md` for the full comparison and maximum delta.

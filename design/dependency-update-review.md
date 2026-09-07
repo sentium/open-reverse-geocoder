@@ -24,6 +24,36 @@ protocol-buffers-schemaも互換範囲内の3.6.1へ更新し、npm audit --omit
 
 根拠: [ts-jest公開メタデータ](https://registry.npmjs.org/ts-jest/29.4.12)、[typescript-eslint公開メタデータ](https://registry.npmjs.org/@typescript-eslint/parser/8.69.0)、[Rollup公式移行ガイド](https://rollupjs.org/migration/)、[ESLint 10公式移行ガイド](https://eslint.org/docs/latest/use/migrate-to-10.0.0)。
 
+## 地理系更新の実施結果（Issue #10）
+
+2026-09-07に公式registry・変更履歴を再確認し、@mapbox/vector-tile 3.0.0、pbf 5.1.2、d3-geo 3.1.1、@types/d3-geo 3.1.1を採用した。vector-tileはpbf ^5.0.0とpoint-geometry ~1.1.0を要求し、3パッケージともESM。fflate 0.8.3、global-mercator 3.1.0、Shapely 2.1.2は据え置き。
+
+- `PbfReader`と同梱型へ移行し、@types/pbfと型なしvector-tile宣言を削除。geoContainsも型付きFeatureを直接受け取る。
+- Rollupで地理系ESMをCommonJSに同梱する。データ生成ツールの同期extract APIも`dist/vector-tile.js`を読むため維持できる。CIとREADMEでbuildをtest:dataより先に実行する。
+- Nodeのrequire(esm)に依存する案はNode 22の初期minorでそのまま使えず、利用者側のバンドラーにも条件を持ち込むため採用しない。Node 22.0.0でもCommonJSの公開APIと内部PbfReaderの読込成功を確認。公開API・最低Node 22・ES2020出力は維持。
+- Jestは対象のESM依存だけをts-jestで変換。標準node環境を維持し、Web API補助コードは復活させていない。
+- バンドルの実際のrendered modulesを確認し、vector-tile / point-geometry / pbf（読取部分）/ d3-geo / d3-array / fflateの6パッケージの完全なライセンス通知を`dist/THIRD_PARTY_LICENSES.txt`へ出力。各JSのバナーから参照し、配布物テストでも通知の同梱を確認。internmapとPbfWriter・スキーマコンパイラはバンドルに含まれない。
+
+比較基準は#9マージcommit `178a3adb181f9aa816414fcbd5b31f4c7a2683f7`（vector-tile 1.3.1 / pbf 3.2.1 / d3-geo 2.0.2）。入力SHA-256、旧出力ハッシュ、地物数と包含判定を`test/fixtures/geography-baseline.json`へ記録した。
+
+- GSI固定PBF 3件: 東京z14のpoints 17 / roads 156、海老名z14の1 / 45、海老名z11の9 / 0。名称・座標・安定IDを含む抽出結果はバイト相当のJSONハッシュまで一致。非ゼロbyteOffsetのUint8Arrayでも一致。
+- 全743行政界タイル・107,073地物: 名称・ID・地物数・座標配列構造は一致。734タイルの116,564座標成分に最大`2.842170943040401e-14`度の差があった。全成分を旧実装と比較し`1e-12`度未満であることを検証した。
+- 差の原因はvector-tileの逆メルカトル計算が`y2 = 180 - (p.y+y0)*360/size; exp(y2*PI/180)`から`exp((1-(p.y+y0)*2/size)*PI)`へ変わった浮動小数点の演算順。名称・検索契約の変更ではない。回帰テストは旧出力を小数8桁へ正規化したハッシュも保持し、全タイルで一致を確認する。元の旧出力ハッシュも残した。
+- 全地物×6固定座標（国内5点・国外1点）のgeoContains結果は完全一致。既存の国内行政名・東京駅/海老名SA・国外OSM検索テストも成功。
+
+| サイズ（全dist JS / npm pack） | 更新前 | 更新後 |
+| --- | ---: | ---: |
+| dist JavaScript合計 | 68,409 B | 108,072 B |
+| npm tarball | 33,612 B | 44,454 B |
+| npm展開後（型・README・ライセンス含む） | 106,644 B | 155,351 B |
+
+- Node 22.23.2 / 24.1.0、npm 11.6.1でnpm ci、typecheck、lint、Jest 65件、build、test:data 12件、integration 1件、別ディレクトリのpack導入・CommonJS・利用側TypeScript 1件が成功。Python 3.12.8で国内行政界3件、OSM Python 8件・Node 7件も成功。
+- Chromeで別オリジンのPBFと通常JSON・gzipバイト列・HTTP Content-Encoding gzipを取得し、千代田区／東京駅の検索、キャッシュ再利用、404、Bufferグローバルなしを確認。
+- npm auditは本番のみ・全依存とも0件。残件なし。
+- `bin/lib/search-data.js`のマージは既存workflowの全国近傍データ再生成と後続Pages公開を起動する。ユーザー承認済み。実行結果・公開URL・run IDは本Issueの完了コメントに記録する。
+
+根拠: [vector-tile公式メタデータ](https://registry.npmjs.org/@mapbox/vector-tile/3.0.0)、[pbfリリース履歴](https://github.com/mapbox/pbf/releases)、[vector-tile実装](https://github.com/mapbox/vector-tile-js/blob/v3.0.0/index.js)、[d3-geoリリース履歴](https://github.com/d3/d3-geo/releases)。
+
 ## 第1段階の検証結果
 
 - Node 24.1.0および22.23.2で型検査・lint・Jest 65件・ビルドを検証。

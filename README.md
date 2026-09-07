@@ -24,6 +24,10 @@ Node.js **22以降**に対応します。Node.js 14/16の対応は終了しま�
 ブラウザでは標準のfetch・ReadableStream・AbortControllerを利用します。
 Axiosおよびaxios-cache-adapterへの依存は廃止しました。APIの引数・戻り値とCommonJSでの利用方法は従来どおりです。
 
+地理系のESM依存は配布時にCommonJSへバンドルしています。同梱コードのライセンス通知は
+`dist/THIRD_PARTY_LICENSES.txt`に含まれます。データ生成ツールもこのバンドルを使用するため、
+リポジトリでデータ生成・`test:data`を行う前に`npm run build`を実行してください。
+
 国内行政界PBF・検索データの取得は、本文の受信完了まで15秒、受信データ16MiBを上限とします。
 HTTPエラー・タイムアウト・サイズ超過は失敗として扱います。国内行政界PBFは24時間キャッシュし、
 最大128件・合計16MiBを超えると古いものから削除します。クエリ文字列を含むPBF URLは従来どおりキャッシュしません。
@@ -200,8 +204,8 @@ GitHub上の **Settings → Pages → Source: GitHub Actions** を設定しま�
 npm run typecheck
 npm run lint
 npm test
-npm run test:data
 npm run build
+npm run test:data
 npm run test:integration
 ```
 
