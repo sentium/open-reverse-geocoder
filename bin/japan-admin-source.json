@@ -1,0 +1,12 @@
+{
+  "version": "n03-20260101",
+  "sourceDate": "2026-01-01",
+  "sourceUrl": "https://nlftp.mlit.go.jp/ksj/gml/data/N03/N03-2026/N03-20260101_GML.zip",
+  "sourcePage": "https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2026.html",
+  "sourceSha256": "1f714fca019e22e6f84012dba420384fc7b49c6ad8bd0a867ab1cfb593a78477",
+  "shapefile": "N03-20260101",
+  "license": "CC-BY-4.0",
+  "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
+  "attribution": "国土数値情報「行政区域データ」（国土交通省、2026年1月1日時点）をopen-reverse-geocoderで加工して作成",
+  "surveyAct": "原典の複製承認番号は R 7JHf 351。本プロジェクト固有の承認番号ではありません。加工・再配布に関する承認要否と既存承認は未確認です。"
+}

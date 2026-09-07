@@ -51,37 +51,49 @@ $ git clone git@github.com:geolonia/open-reverse-geocoder.git
 $ cd open-reverse-geocoder
 ```
 
-タイルデータを用意するコマンドを実行するために必要な以下のツール群をインストールする。
+Python 3.10以降とtippecanoeを使用します（macOSは `brew install tippecanoe`）。
 
-- ogr2ogr (macOS の場合は `brew install gdal` でインストールできます)
-- tippercanoe (macOS の場合は `brew install tippecanoe` でインストールできます)
-- mb-util (インストール方法については https://github.com/mapbox/mbutil#installation を参照)
-
-その後、以下のコマンドを実行すること。
-
-```
-$ npm run build:tiles
+```sh
+python3 -m venv tmp/japan-admin-venv
+tmp/japan-admin-venv/bin/python -m pip install -r bin/japan-admin-requirements.txt
+PYTHON=tmp/japan-admin-venv/bin/python npm run build:tiles
 ```
 
-#### 上述のコマンドの解説
+国土数値情報の**2026年1月1日時点**の全国行政区域データを取得し、
+`bin/japan-admin-source.json` のSHA-256と照合して生成します。
+修正版が同じURLで公開された場合も、内容を確認してハッシュを更新するまで生成を停止します。
+既に取得済みのZIPは `npm run build:tiles -- --archive /path/to/N03-20260101_GML.zip` で指定できます。
 
-1. まず国土数値情報から、最新の行政区域データをダウンロードする。最新版は URL が変わるので注意。
-2. 解凍
-3. `ogr2ogr` で GeoJSON に変換。ファイル名に注意。
-4. タイルのプロパティを調整するためのスクリプトを実行。
-5. `tippecanoe` で `*.mbtiles` を作成。意図的に圧縮を無効にしている。
-6. タイルを分解して静的に利用できるようにする。
+全国の地物を1件ずつ読み、郡名・市区町村名・政令指定都市の行政区名を検索用の名称へ変換します。
+所属未定地は原典の都道府県コードと空の市区町村名を保持します。
+ズーム10のPBFタイルと対応する `src/japan-tiles.ts` を再生成し、
+`docs/tiles/manifest.json` に原典・基準日・ハッシュ・生成情報を記録します。
+生成完了後に既存タイルを置き換えます。行政界PBFは既存クライアントと互換の非圧縮形式です。
+検索時には必要なタイルだけを取得し、元ZIPや全国の地物を読み込むことはありません。
 
 ## 出典
 
-都道府県及び市区町村データについては、国土数値情報の行政区域ポリゴンを使用しています。
-
-https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-v2_4.html
+国内行政界は[国土数値情報「行政区域データ」2026年版（国土交通省）](https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2026.html)を加工しています。
+既定の配信先は `https://sentium.github.io/open-reverse-geocoder/tiles/{z}/{x}/{y}.pbf` です。
+利用する配信先の `tiles/manifest.json` でデータ版を確認してください。
 
 ## ライセンス
 
-ソースコードはMITです。配信データには出典ごとの利用条件が適用されます
-（国外のOSM由来データはODbL 1.0）。
+| 対象 | 条件 |
+| --- | --- |
+| ライブラリのコード | [MIT](LICENSE.txt)。既存の著作権表示と許諾文を保持 |
+| 国内行政界（N03 2026年版） | [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)。出典・ライセンス・加工表示等が必要 |
+| 国内の駅・施設・道路 | 国土地理院コンテンツ利用規約と提供実験の個別説明。出典・加工表示等が必要 |
+| 国外のOSM由来データ | ODbL 1.0。帰属表示と公開する派生DBの提供条件に従う |
+
+国内行政界には、原典に記載された測量法上の注意も適用されます。
+原典の承認番号 `R 7JHf 351` は本プロジェクト固有の承認を示すものではありません。
+**今回の加工・再配布の承認要否と既存承認は未確認です。** CC BY 4.0だけで申請不要とは判断しません。
+
+配信時に添付する案内は[国内行政界](data-licenses/japan-admin.txt)と[国内近傍データ](data-licenses/japan-nearby.txt)、
+運用上の確認事項と表示例は[ライセンス整理](design/licensing-review.md)を参照してください。
+コードのMITは配信データの条件を置き換えるものではありません。
+利用アプリでも出典が利用者に分かるように表示してください。
 
 ## 駅・名勝・高速道路施設の近傍検索
 

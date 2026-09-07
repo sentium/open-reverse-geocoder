@@ -6,6 +6,9 @@ on:
     paths:
       - 'bin/build-search-data.js'
       - 'bin/lib/**'
+      - 'docs/tiles/**'
+      - 'data-licenses/**'
+      - 'bin/prepare-pages.js'
       - '.github/workflows/search-data.yml'
   pull_request:
     paths:

@@ -21,9 +21,9 @@ async function prepare(dataDir, siteDir) {
     path.join(siteDir, 'data/manifest.json'),
   )
   await fs.writeFile(path.join(siteDir, '.nojekyll'), '')
-  await fs.writeFile(
+  await fs.copyFile(
+    path.join(__dirname, '../data-licenses/japan-nearby.txt'),
     path.join(siteDir, 'data/README.txt'),
-    '国土地理院ベクトルタイル提供実験のデータを加工して作成\nhttps://github.com/gsi-cyberjapan/gsimaps-vector-experiment\n収録範囲・生成時刻・データ版は manifest.json を参照してください。\n',
   )
   return report
 }
