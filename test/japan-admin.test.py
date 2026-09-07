@@ -1,10 +1,17 @@
 import importlib.util
+import hashlib
+import json
+import shutil
+import struct
+import tempfile
 import unittest
 from pathlib import Path
 
 spec = importlib.util.spec_from_file_location("admin", Path(__file__).resolve().parents[1] / "bin/build-japan-admin.py")
 admin = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(admin)
+FIXTURE = Path(__file__).parent / "fixtures/japan-admin"
+BASELINE = json.loads((FIXTURE / "baseline.json").read_text(encoding="utf-8"))
 
 
 class AdministrativeNames(unittest.TestCase):
@@ -27,6 +34,35 @@ class AdministrativeNames(unittest.TestCase):
         row.update(N03_005="", N03_007="not-a-code")
         with self.assertRaises(ValueError):
             admin.properties(row)
+
+
+class ShapefileCompatibility(unittest.TestCase):
+    def test_fixed_input_and_records_match_pyshp_2_baseline(self):
+        for name, expected in BASELINE["sourceHashes"].items():
+            self.assertEqual(hashlib.sha256((FIXTURE / name).read_bytes()).hexdigest(), expected)
+        with admin.shapefile.Reader(str(FIXTURE / "municipalities"), encoding="utf-8") as reader:
+            # PyShp 3 preserves enclosing DBF whitespace; normalize it as the
+            # municipal conversion does, while retaining all names and codes.
+            records = [{key: value.strip() for key, value in item.record.as_dict().items()}
+                       for item in reader.iterShapeRecords()]
+        self.assertEqual(records, BASELINE["records"])
+
+    def test_converted_names_ids_and_geometry_match_pyshp_2_baseline(self):
+        features = list(admin.iter_features(FIXTURE / "municipalities"))
+        self.assertEqual(json.loads(json.dumps(features)), BASELINE["features"])
+
+    def test_invalid_utf8_is_rejected_without_replacement_characters(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            folder = Path(temporary)
+            for name in BASELINE["sourceHashes"]:
+                shutil.copyfile(FIXTURE / name, folder / name)
+            dbf = folder / "municipalities.dbf"
+            data = bytearray(dbf.read_bytes())
+            header_size = struct.unpack_from("<H", data, 8)[0]
+            data[header_size + 1] = 0xff  # First UTF-8 byte after the deletion flag.
+            dbf.write_bytes(data)
+            with self.assertRaises((UnicodeDecodeError, admin.shapefile.ShapefileException)):
+                list(admin.iter_features(folder / "municipalities"))
 
 
 if __name__ == "__main__":

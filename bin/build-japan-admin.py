@@ -27,16 +27,18 @@ def properties(record):
 
     def name(key):
         value = record[key]
-        if value is None or value == "所属未定地":
+        if value is None:
             return ""
         if not isinstance(value, str):
             raise ValueError(f"Invalid name: {key}")
-        return value.strip()
+        # PyShp 3 retains enclosing DBF whitespace that 2.x stripped.
+        value = value.strip()
+        return "" if value == "所属未定地" else value
 
     prefecture = name("N03_001")
     # 2024+ separates designated-city names and ward names into N03_004/005.
     city = name("N03_003") + name("N03_004") + name("N03_005")
-    unassigned = code.endswith("000") and record["N03_004"] == "所属未定地"
+    unassigned = code.endswith("000") and (record["N03_004"] or "").strip() == "所属未定地"
     if not prefecture or (not city and not unassigned):
         raise ValueError(f"Missing administrative name: {code}")
     return int(code), {"prefecture": prefecture, "city": city}
@@ -48,6 +50,17 @@ def digest(filename):
         for chunk in iter(lambda: stream.read(1024 * 1024), b""):
             value.update(chunk)
     return value.hexdigest()
+
+
+def iter_features(filename):
+    """Read N03 records with an explicit encoding and stream GeoJSON features."""
+    with shapefile.Reader(str(filename), encoding="utf-8") as reader:
+        for item in reader.iterShapeRecords():
+            identifier, props = properties(item.record.as_dict())
+            geometry = item.shape.__geo_interface__
+            if geometry["type"] not in ("Polygon", "MultiPolygon"):
+                raise ValueError("Expected administrative polygon")
+            yield {"type": "Feature", "id": identifier, "properties": props, "geometry": geometry}
 
 
 def build(archive, output, index, tippecanoe):
@@ -71,17 +84,13 @@ def build(archive, output, index, tippecanoe):
         count = 0
         municipalities = {}
         geojson = work / "admins.geojsonl"
-        with shapefile.Reader(str(work / source["shapefile"]), encoding="utf-8") as reader, geojson.open("w") as stream:
-            for item in reader.iterShapeRecords():
-                identifier, props = properties(item.record.as_dict())
-                code = str(identifier).zfill(5)
+        with geojson.open("w", encoding="utf-8") as stream:
+            for feature in iter_features(work / source["shapefile"]):
+                props = feature["properties"]
+                code = str(feature["id"]).zfill(5)
                 if code in municipalities and municipalities[code] != props:
                     raise ValueError(f"Conflicting names for {code}")
                 municipalities[code] = props
-                geometry = item.shape.__geo_interface__
-                if geometry["type"] not in ("Polygon", "MultiPolygon"):
-                    raise ValueError("Expected administrative polygon")
-                feature = {"type": "Feature", "id": identifier, "properties": props, "geometry": geometry}
                 stream.write(json.dumps(feature, ensure_ascii=False, separators=(",", ":")) + "\n")
                 count += 1
         if len({code[:2] for code in municipalities}) != 47:
