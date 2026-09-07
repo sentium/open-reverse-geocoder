@@ -2,7 +2,7 @@ import { URL } from 'url'
 import fs from 'fs'
 import path from 'path'
 
-const get = jest.fn(async (input: RequestInfo) => {
+const get = jest.fn(async (input: RequestInfo | URL) => {
   const url = String(input)
   const tile = new URL(url).pathname.split('/tiles/')[1]
   if (!tile) throw new Error(`Unexpected search data request: ${url}`)

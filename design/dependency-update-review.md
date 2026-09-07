@@ -4,9 +4,25 @@
 第1段階を実装済み: Axios/axios-cache-adapterを削除し、標準fetchへ移行した。
 最低対応Nodeを22、CIを22/24、開発環境を24.20.0に変更した。Node 14向けtsconfigプリセットを削除し、ブラウザ向けES2020出力は明示的に維持。
 protocol-buffers-schemaも互換範囲内の3.6.1へ更新し、npm audit --omit=devは0件になった。
-以下の調査時点の版一覧・監査件数と、第2/第3段階の候補は履歴として保持する。開発ツール群の更新は未実施。
-既存のJest 26ではWeb APIがテスト環境へ渡らないため、test/node-environment.jsでNode標準実装を渡している。
-@types/node 14系は旧TypeScriptとの互換性のため第2段階まで据え置き、fetchの型はDOMの型定義を使用する。これはNode 14の実行時サポートを意味しない。
+以下の調査時点の版一覧・監査件数と、第2/第3段階の候補は履歴として保持する。開発ツール群の更新結果は次節に記載する。
+第1段階ではJest 26にWeb APIを渡すtest/node-environment.jsを使用したが、第2段階で削除した。
+第1段階で据え置いた@types/node 14系も第2段階で22系へ更新した。
+
+## 第2段階の実施結果（Issue #9）
+
+2026-09-07にnpm公式registryの最新タグ・engines・peerDependenciesを再取得した。
+採用版はRollup 4.63.1、公式commonjs 29.0.3 / node-resolve 16.0.3 / typescript 12.3.0、tslib 2.8.1、TypeScript 5.9.3、@types/node 22.20.1、Jest 30.5.1 / ts-jest 29.4.12 / @types/jest 30.0.0、ESLint 10.10.0 / typescript-eslint parser・plugin 8.69.0、Prettier 3.9.6 / eslint-config-prettier 10.1.8 / eslint-plugin-prettier 5.5.6。
+
+- ts-jestはJest ^29 || ^30、TypeScript >=4.3 <7、typescript-eslintはTypeScript >=4.8.4 <6.1.0を要求するため5.9.3を選択。TypeScript latest 7.0.2は採用しない。
+- Rollup設定を.mjs化しts-nodeを削除。ESLintをflat configへ移行し旧ignore・削除済みルールを整理。Prettierの7行のインデント変更は独立commitに分離。
+- Jest設定をtransformへ移し標準node環境へ戻した。65件すべてがfetch/Response/AbortControllerの補助なしで成功。fetchモックの入力型にURLを追加。
+- ES2020出力、CommonJS、公開API、最低Node 22を維持。ESLint 10のため開発用Nodeは22.13以降または24以降。npmは11.6.1をpackageManager、README、Node 22/24のbuild CIで統一。
+- lockfile v3を再生成。旧lockからの直接更新はnpmの旧peer解決で失敗したためクリーン解決し、npm lsでpeer整合性を確認した。vector-tile 1.3.1 / pbf 3.2.1を維持。d3-geo 2.0.1の依存指定（d3-array >=2）がESMの3系を解決してJest/古いNode 22で壊れるため、同じ2系の2.0.2（d3-array ^2.5.0）へ限定更新した。3系への移行は#10で扱う。
+- Node 22.23.2 / 24.1.0でnpm ci、typecheck、lint、Jest 65件、build、test:data 10件、test:integration 1件、test:package 1件が成功。Python 3.12.8で国内行政界3件、OSM Python 8件・Node 7件が成功。
+- test:packageをCIへ追加し、npm packを別ディレクトリへ導入してCommonJS公開関数、利用側TypeScript（skipLibCheckなし）、配布物の本番依存監査を検証。
+- npm auditは本番・開発を含め0件、本番のみも0件。残件なし。glob 10.5.0の非推奨警告はJest側の推移依存から出るが、この版に対する監査指摘は0件。
+
+根拠: [ts-jest公開メタデータ](https://registry.npmjs.org/ts-jest/29.4.12)、[typescript-eslint公開メタデータ](https://registry.npmjs.org/@typescript-eslint/parser/8.69.0)、[Rollup公式移行ガイド](https://rollupjs.org/migration/)、[ESLint 10公式移行ガイド](https://eslint.org/docs/latest/use/migrate-to-10.0.0)。
 
 ## 第1段階の検証結果
 

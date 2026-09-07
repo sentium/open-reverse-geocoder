@@ -18,6 +18,9 @@
 ## インストール方法
 
 Node.js **22以降**に対応します。Node.js 14/16の対応は終了しました。開発環境はNode.js 24 LTSを使用します。
+
+開発・CIの依存導入にはnpm 11.6.1を使用します（`npm install --global npm@11.6.1`）。
+開発ツールの実行にはNode.js 22.13以降または24以降が必要です。ライブラリの最低対応はNode.js 22のままです。
 ブラウザでは標準のfetch・ReadableStream・AbortControllerを利用します。
 Axiosおよびaxios-cache-adapterへの依存は廃止しました。APIの引数・戻り値とCommonJSでの利用方法は従来どおりです。
 
