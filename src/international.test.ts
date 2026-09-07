@@ -1,4 +1,3 @@
-import axios from 'axios'
 import {
   reverseGeocode,
   UnsupportedRegionError,
@@ -10,9 +9,9 @@ import { polygonContains, polygonCoversTile } from './polygon'
 import { tileAt, tileKey, lineDistanceM } from './spatial'
 import { openReverseGeocoder } from './japan'
 
-jest.mock('axios', () => ({ get: jest.fn() }))
 jest.mock('./japan', () => ({ openReverseGeocoder: jest.fn() }))
-const get = axios.get as jest.Mock
+const get = jest.fn()
+globalThis.fetch = get
 const japan = openReverseGeocoder as jest.Mock
 const root = 'https://test.invalid/osm'
 const position: [number, number] = [-77.006, 38.897]
@@ -112,8 +111,8 @@ beforeEach(() => {
     ],
   ])
   get.mockImplementation(async (url: string) => {
-    if (!data.has(url)) throw Error('404')
-    return { data: JSON.stringify(data.get(url)) }
+    if (!data.has(url)) return new Response('Not found', { status: 404 })
+    return new Response(JSON.stringify(data.get(url)))
   })
 })
 const options = {

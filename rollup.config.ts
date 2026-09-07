@@ -8,12 +8,6 @@ export default {
     dir: 'dist',
     format: 'cjs',
   },
-  plugins: [typescript(), resolve(), commonjs()],
-  external: [
-    'axios',
-    'd3-geo',
-    'global-mercator',
-    'pbf',
-    '@mapbox/vector-tile',
-  ],
+  plugins: [typescript({ module: 'ESNext' }), resolve(), commonjs()],
+  external: ['d3-geo', 'global-mercator', 'pbf', '@mapbox/vector-tile'],
 }

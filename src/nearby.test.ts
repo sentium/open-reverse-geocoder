@@ -1,4 +1,3 @@
-import axios from 'axios'
 import { searchNearby } from './nearby'
 import {
   clearNearbyCache,
@@ -9,8 +8,8 @@ import {
 import { LngLat, distanceM, tileAt, tileKey, tilesWithin } from './spatial'
 import { PoiRecord, SearchManifest, SearchRule } from './nearby-types'
 
-jest.mock('axios', () => ({ get: jest.fn() }))
-const get = axios.get as jest.Mock
+const get = jest.fn()
+globalThis.fetch = get
 const position: LngLat = [139.75, 35.68]
 const base = 'https://example.test/data'
 const station: SearchRule = { kind: 'station', radiusM: 5000, priority: 50 }
@@ -61,8 +60,8 @@ beforeEach(() => {
   }
   responses = new Map([[`${base}/manifest.json`, manifest]])
   get.mockImplementation(async (url: string) => {
-    if (!responses.has(url)) throw new Error('HTTP 404')
-    return { data: JSON.stringify(responses.get(url)) }
+    if (!responses.has(url)) return new Response('Not found', { status: 404 })
+    return new Response(JSON.stringify(responses.get(url)))
   })
 })
 const search = (rules: SearchRule[], extra = {}) =>

@@ -1,8 +1,7 @@
 import { geoContains } from 'd3-geo'
 import { lngLatToGoogle } from 'global-mercator'
 import Protobuf from 'pbf'
-import axios from 'axios'
-import { setupCache } from 'axios-cache-adapter'
+import { loadJapanTile } from './japan-tile-cache'
 import { VectorTile } from '@mapbox/vector-tile'
 import { searchNearby } from './nearby'
 import { NearbyOptions, NearbyResult } from './nearby-types'
@@ -34,14 +33,6 @@ const DEFAULT_OPTIONS: ReverseGeocodingOptions = {
   layer: 'japanese-admins',
 }
 
-const cache = setupCache({
-  maxAge: 60 * 60 * 24 * 1000,
-})
-
-const api = axios.create({
-  adapter: cache.adapter,
-})
-
 export const openReverseGeocoder: (
   input: LngLat,
   options?: Partial<ReverseGeocodingOptions>,
@@ -62,15 +53,7 @@ export const openReverseGeocoder: (
     city: '',
   }
 
-  let buffer
-
-  try {
-    const res = await api.get(tileUrl, { responseType: 'arraybuffer' })
-    buffer = Buffer.from(res.data, 'binary')
-  } catch (error) {
-    throw new Error(error)
-  }
-
+  const buffer = await loadJapanTile(tileUrl)
   const tile = new VectorTile(new Protobuf(buffer))
   let layers = Object.keys(tile.layers)
 

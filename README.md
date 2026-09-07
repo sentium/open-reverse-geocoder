@@ -17,6 +17,16 @@
 
 ## インストール方法
 
+Node.js **22以降**に対応します。Node.js 14/16の対応は終了しました。開発環境はNode.js 24 LTSを使用します。
+ブラウザでは標準のfetch・ReadableStream・AbortControllerを利用します。
+Axiosおよびaxios-cache-adapterへの依存は廃止しました。APIの引数・戻り値とCommonJSでの利用方法は従来どおりです。
+
+国内行政界PBF・検索データの取得は、本文の受信完了まで15秒、受信データ16MiBを上限とします。
+HTTPエラー・タイムアウト・サイズ超過は失敗として扱います。国内行政界PBFは24時間キャッシュし、
+最大128件・合計16MiBを超えると古いものから削除します。クエリ文字列を含むPBF URLは従来どおりキャッシュしません。
+検索データのLRU・TTL・gzip検証は維持しています。
+Node.jsでプロキシが必要な場合は標準fetch側で設定してください。Axiosのプロキシ設定は引き継ぎません。
+
 ```
 $ npm install @geolonia/open-reverse-geocoder -S
 ```

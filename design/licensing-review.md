@@ -124,7 +124,7 @@ Pagesに自作コードのルートLICENSEがないこと自体は、そこで�
 
 `npm ls --omit=dev --all` で確認した通常の実行時依存はMIT・BSD-3-Clause・ISCだった。
 これはビルドツールまで含めた全ソフトウェアの監査ではない。
-[Rollup設定](../rollup.config.ts)では `fflate` と `axios-cache-adapter` はexternal指定されず、生成JSに含まれる。
+[Rollup設定](../rollup.config.ts)では `fflate` はexternal指定されず、生成JSに含まれる。Axiosとaxios-cache-adapterは標準fetchへの移行により削除した。
 `npm pack --dry-run` では両者の個別LICENSEは梱包対象に見当たらず、生成JSでもそれぞれの著作権表示を確認できなかった。
 通常のnpm依存として別途インストールされる場合との違いを含め、バンドル配布時の通知を整える必要がある。
 次のパッケージ配布前に、実際に含まれる推移依存も棚卸ししてTHIRD_PARTY_NOTICES等を同梱することを推奨する。

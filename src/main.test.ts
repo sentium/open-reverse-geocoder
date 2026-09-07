@@ -1,23 +1,16 @@
-import axios from 'axios'
 import { URL } from 'url'
 import fs from 'fs'
 import path from 'path'
 
-jest.mock('axios', () => {
-  const actual = jest.requireActual('axios')
-  return {
-    ...actual,
-    get: jest.fn(),
-    create: () => ({
-      get: jest.fn(async (url: string) => {
-        const tile = new URL(url).pathname.split('/tiles/')[1]
-        return {
-          data: fs.readFileSync(path.join(__dirname, '../docs/tiles', tile)),
-        }
-      }),
-    }),
-  }
+const get = jest.fn(async (input: RequestInfo) => {
+  const url = String(input)
+  const tile = new URL(url).pathname.split('/tiles/')[1]
+  if (!tile) throw new Error(`Unexpected search data request: ${url}`)
+  return new Response(
+    fs.readFileSync(path.join(__dirname, '../docs/tiles', tile)),
+  )
 })
+globalThis.fetch = get
 
 import { openReverseGeocoder as geocoder } from './main'
 
@@ -86,7 +79,9 @@ test('旧浜北区の浜北駅は浜松市浜名区（22139）', async () => {
 
 test('legacy calls do not request optional search data', async () => {
   await geocoder([139.7673068, 35.6809591])
-  expect(axios.get).not.toHaveBeenCalled()
+  expect(get.mock.calls.every(([url]) => String(url).includes('/tiles/'))).toBe(
+    true,
+  )
 })
 
 test('optional nearby result is included only when requested', async () => {
