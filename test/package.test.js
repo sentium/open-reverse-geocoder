@@ -35,6 +35,26 @@ test('packed CommonJS package and public declarations work in an isolated consum
     path.join(directory, packed.filename),
   ])
   const consumerRequire = createRequire(path.join(directory, 'consumer.cjs'))
+  const notices = await fs.readFile(
+    path.join(
+      directory,
+      'node_modules',
+      '@geolonia',
+      'open-reverse-geocoder',
+      'dist',
+      'THIRD_PARTY_LICENSES.txt',
+    ),
+    'utf8',
+  )
+  for (const dependency of [
+    '@mapbox/vector-tile',
+    '@mapbox/point-geometry',
+    'pbf',
+    'd3-geo',
+    'd3-array',
+    'fflate',
+  ])
+    assert.ok(notices.includes(dependency), dependency)
   const api = consumerRequire('@geolonia/open-reverse-geocoder')
   for (const name of [
     'openReverseGeocoder',

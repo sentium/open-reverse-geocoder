@@ -1,5 +1,6 @@
-const { VectorTile } = require('@mapbox/vector-tile')
-const Pbf = require('pbf')
+// Use the bundled CommonJS reader on every supported Node 22 version.
+// Run npm run build before invoking the data generation tools.
+const { VectorTile, PbfReader } = require('../../dist/vector-tile')
 const { createHash } = require('crypto')
 const fs = require('fs/promises')
 const path = require('path')
@@ -78,7 +79,7 @@ function pointRecord(category, name, coordinates) {
   return [id, category, name, lng, lat]
 }
 function extract(buffer, z, x, y) {
-  const tile = new VectorTile(new Pbf(buffer)),
+  const tile = new VectorTile(new PbfReader(buffer)),
     points = [],
     roads = []
   if (!Object.keys(tile.layers).length)
