@@ -1,4 +1,4 @@
-import axios from 'axios'
+import { fetchBytes } from './http'
 import {
   PLACE_CATEGORIES,
   PoiTile,
@@ -89,17 +89,7 @@ export async function loadJson<T>(
   const request = (async () => {
     await acquire()
     try {
-      const response = await axios.get(url, {
-        responseType: url.endsWith('.json.gz') ? 'arraybuffer' : 'text',
-        timeout: 15000,
-        transformResponse: [(data: string) => data],
-        maxContentLength: MAX_BYTES,
-      })
-      const raw = url.endsWith('.json.gz')
-        ? decodeJsonBytes(new Uint8Array(response.data))
-        : typeof response.data === 'string'
-        ? response.data
-        : JSON.stringify(response.data)
+      const raw = decodeJsonBytes(await fetchBytes(url))
       if (raw.length * 2 > MAX_BYTES)
         throw new SearchDataError(`Search data is too large: ${url}`)
       const value = validate(JSON.parse(raw))

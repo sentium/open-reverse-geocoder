@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 22.x, 24.x]
+        node-version: [22.x, 24.x]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -32,14 +32,13 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: npm
       - run: npm ci
+      - run: npm audit --omit=dev
       - run: npm run typecheck
       - run: npm run lint
       - run: npm test
       - run: npm run test:data
-        if: matrix.node-version == '22.x' || matrix.node-version == '24.x'
       - run: npm run build
       - run: npm run test:integration
-        if: matrix.node-version == '22.x' || matrix.node-version == '24.x'
       - uses: actions/setup-python@v5
         if: matrix.node-version == '22.x'
         with:

@@ -1,10 +1,9 @@
 import { gzipSync } from 'zlib'
-import axios from 'axios'
 import { decodeGzip } from './gzip'
 import { clearNearbyCache, loadJson, validatePoiTile } from './search-data'
 
-jest.mock('axios', () => ({ get: jest.fn() }))
-const get = axios.get as jest.Mock
+const get = jest.fn()
+globalThis.fetch = get
 
 test('decodes Unicode and rejects truncated, corrupt and concatenated gzip', () => {
   const json = '{"name":"กรุงเทพ・Hà Nội・नई दिल्ली"}'
@@ -30,12 +29,11 @@ test('loads and caches gzip tiles, including HTTP-decoded responses', async () =
   clearNearbyCache()
   get.mockReset()
   const json = '{"schemaVersion":1,"points":[]}'
-  get.mockResolvedValueOnce({ data: gzipSync(Buffer.from(json)) })
+  get.mockResolvedValueOnce(new Response(gzipSync(Buffer.from(json))))
   await loadJson('https://test.invalid/one.json.gz', validatePoiTile)
   await loadJson('https://test.invalid/one.json.gz', validatePoiTile)
   expect(get).toHaveBeenCalledTimes(1)
-  expect(get.mock.calls[0][1].responseType).toBe('arraybuffer')
-  get.mockResolvedValueOnce({ data: Buffer.from(json) })
+  get.mockResolvedValueOnce(new Response(json))
   await expect(
     loadJson('https://test.invalid/two.json.gz', validatePoiTile),
   ).resolves.toEqual({ schemaVersion: 1, points: [] })
