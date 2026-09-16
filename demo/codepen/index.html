@@ -1,0 +1,107 @@
+<link
+  rel="stylesheet"
+  href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css"
+/>
+<main class="app">
+  <header>
+    <div>
+      <p class="eyebrow">SENTIUM / OPEN REVERSE GEOCODER</p>
+      <h1>この場所を、知る。</h1>
+      <p class="intro">地図をクリックして、地名と近くの施設を検索。</p>
+    </div>
+    <a
+      class="repo"
+      href="https://github.com/sentium/open-reverse-geocoder"
+      target="_blank"
+      rel="noopener"
+      >GitHub ↗</a
+    >
+  </header>
+  <section class="controls" aria-label="検索条件">
+    <label class="samples">サンプル地点<select id="sample"></select></label>
+    <form id="search-form">
+      <label
+        >経度<input
+          id="longitude"
+          type="number"
+          min="-180"
+          max="180"
+          step="any"
+          value="139.7673068"
+          required
+      /></label>
+      <label
+        >緯度<input
+          id="latitude"
+          type="number"
+          min="-85.05"
+          max="85.05"
+          step="any"
+          value="35.6809591"
+          required
+      /></label>
+      <button type="submit">この座標を検索</button>
+    </form>
+    <label
+      >近傍検索<select id="kind">
+        <option value="all">すべての施設</option>
+        <option value="station">駅</option>
+        <option value="landmark">名所・施設</option>
+        <option value="highway">高速道路施設</option>
+        <option value="none">行政地名のみ</option>
+      </select></label
+    >
+  </section>
+  <div class="workspace">
+    <section class="map-panel">
+      <div id="map" aria-label="検索する地点の地図"></div>
+      <p class="map-tip">クリックした地点を検索 · 緑のマーカーは周辺施設</p>
+    </section>
+    <section class="results" aria-label="検索結果" aria-busy="false">
+      <div class="result-header">
+        <h2>検索結果</h2>
+        <span id="status" role="status" aria-live="polite">準備中</span>
+      </div>
+      <p id="place" class="place">—</p>
+      <p id="coordinates" class="muted"></p>
+      <ol id="areas" class="areas"></ol>
+      <h3>近くの施設</h3>
+      <p class="muted">
+        高速施設 5 km・名所 1 km・駅 5 km以内。各分類から最大3件。
+      </p>
+      <ul id="nearby" class="nearby"></ul>
+      <p id="version" class="version"></p>
+      <details>
+        <summary>APIレスポンス / JSON</summary>
+        <pre id="json">まだ検索していません。</pre>
+      </details>
+    </section>
+  </div>
+  <footer>
+    <p>
+      日本と公開済みの海外地域に対応。未公開地域や収録範囲外では検索できません。距離は直線距離で、高速道路上の判定は推定です。
+    </p>
+    <p>
+      行政界：<a
+        href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N03-2026.html"
+        target="_blank"
+        rel="noopener"
+        >国土数値情報（国土交通省、2026年版）</a
+      >
+      / CC BY 4.0を加工。国内施設：<a
+        href="https://github.com/gsi-cyberjapan/gsimaps-vector-experiment"
+        target="_blank"
+        rel="noopener"
+        >国土地理院ベクトルタイル提供実験</a
+      >を加工。国外：©
+      <a
+        href="https://www.openstreetmap.org/copyright"
+        target="_blank"
+        rel="noopener"
+        >OpenStreetMap contributors / ODbL 1.0</a
+      >を加工。
+    </p>
+    <p id="attribution"></p>
+  </footer>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>

@@ -6,7 +6,10 @@
 
 都道府県名および市区町村名を検索するために必要なデータを、ベクトルタイルフォーマットで GitHub ページ上にホストしていますので、安心して無料でご利用いただけます。
 
-[デモ](https://codepen.io/geolonia/pen/oNZLPQP)
+[デモ（このリポジトリの公開データを使用）](https://codepen.io/editor/sentium-the-selector/pen/01a0a8da-ed55-7415-908e-ad199283f9dd?orientation=left&panel=false&show=preview)
+
+地図クリック・座標入力で、日本と公開済みの海外地域の行政地名や周辺施設を検索できます。
+デモのソースと更新手順は [demo/codepen](demo/codepen/README.md) を参照してください。
 
 また、GitHub ページ上にホストしたベクトルタイルを使用して都道府県名と市区町村を取得するという仕様のため、このモジュールを開発する Geolonia では個人情報の収集を一切行っておらず、安心してご利用ただけます。
 

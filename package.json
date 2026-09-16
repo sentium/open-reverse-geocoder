@@ -7,6 +7,7 @@
     "test": "jest --runInBand",
     "lint": "eslint \"src/**/*.ts\"",
     "build": "rm -rf ./dist && rollup -c ./rollup.config.mjs",
+    "build:codepen": "node bin/build-codepen.mjs",
     "build:tiles": "bash bin/build.sh",
     "typecheck": "tsc --noEmit",
     "build:data": "node bin/build-search-data.js",
